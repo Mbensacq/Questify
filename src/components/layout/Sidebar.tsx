@@ -196,28 +196,56 @@ export const Sidebar: React.FC = () => {
 // Mobile Bottom Navigation
 export const BottomNav: React.FC = () => {
   const { isMobile } = useUIStore();
+  const location = useLocation();
 
   if (!isMobile) return null;
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 z-40 bg-white/95 dark:bg-gray-900/95 border-t border-gray-200 dark:border-gray-800 backdrop-blur-lg safe-area-bottom">
-      <div className="flex justify-around items-center h-16 px-2 pb-safe">
-        {navItems.slice(0, 5).map((item) => (
-          <NavLink
-            key={item.path}
-            to={item.path}
-            className={({ isActive }) =>
-              cn(
-                'flex flex-col items-center justify-center flex-1 h-full py-2 rounded-xl mx-0.5 transition-all duration-200 touch-manipulation',
-                'text-gray-500 dark:text-gray-400',
-                isActive && 'text-primary-500 bg-primary-50 dark:bg-primary-900/20'
-              )
-            }
-          >
-            <item.icon className="w-5 h-5" />
-            <span className="text-[10px] mt-1 font-medium">{item.label}</span>
-          </NavLink>
-        ))}
+    <nav className="fixed bottom-0 left-0 right-0 z-40 safe-area-bottom">
+      {/* Glass background */}
+      <div className="absolute inset-0 bg-white/80 dark:bg-gray-900/80 backdrop-blur-xl border-t border-white/20 dark:border-gray-700/30" />
+      
+      <div className="relative flex justify-around items-center h-16 px-2 pb-safe max-w-lg mx-auto">
+        {navItems.slice(0, 5).map((item) => {
+          const isActive = location.pathname === item.path;
+          return (
+            <NavLink
+              key={item.path}
+              to={item.path}
+              className="relative flex flex-col items-center justify-center flex-1 h-full py-1.5 touch-manipulation group"
+            >
+              {/* Active indicator pill */}
+              {isActive && (
+                <motion.div
+                  layoutId="bottomNavIndicator"
+                  className="absolute inset-x-2 top-1 h-1 bg-gradient-to-r from-teal-500 to-cyan-500 rounded-full"
+                  transition={{ type: 'spring', stiffness: 500, damping: 30 }}
+                />
+              )}
+              
+              <motion.div
+                whileTap={{ scale: 0.9 }}
+                className={cn(
+                  'p-1.5 rounded-xl transition-colors duration-200',
+                  isActive 
+                    ? 'text-teal-600 dark:text-teal-400' 
+                    : 'text-gray-400 dark:text-gray-500 group-hover:text-gray-600 dark:group-hover:text-gray-300'
+                )}
+              >
+                <item.icon className="w-5 h-5" strokeWidth={isActive ? 2.5 : 2} />
+              </motion.div>
+              
+              <span className={cn(
+                'text-[10px] font-medium transition-colors duration-200',
+                isActive 
+                  ? 'text-teal-600 dark:text-teal-400' 
+                  : 'text-gray-400 dark:text-gray-500'
+              )}>
+                {item.label}
+              </span>
+            </NavLink>
+          );
+        })}
       </div>
     </nav>
   );

@@ -38,20 +38,24 @@ export const Layout: React.FC = () => {
 
       {/* Floating Action Button */}
       <motion.div
-        initial={{ scale: 0 }}
-        animate={{ scale: 1 }}
+        initial={{ scale: 0, opacity: 0 }}
+        animate={{ scale: 1, opacity: 1 }}
+        transition={{ delay: 0.2, type: 'spring', stiffness: 400, damping: 25 }}
         className={cn(
           'fixed z-40',
-          isMobile ? 'bottom-24 right-4' : 'bottom-8 right-8'
+          isMobile ? 'bottom-[88px] right-4' : 'bottom-8 right-8'
         )}
       >
-        <Button
-          variant="game"
-          className="w-14 h-14 rounded-full shadow-xl"
+        <motion.button
+          whileHover={{ scale: 1.05 }}
+          whileTap={{ scale: 0.95 }}
           onClick={openTaskModal}
+          className="relative w-14 h-14 rounded-2xl bg-gradient-to-br from-teal-500 to-cyan-500 text-white shadow-lg shadow-teal-500/30 flex items-center justify-center group"
         >
-          <Plus className="w-6 h-6" />
-        </Button>
+          {/* Pulse effect */}
+          <span className="absolute inset-0 rounded-2xl bg-gradient-to-br from-teal-500 to-cyan-500 animate-ping opacity-20" />
+          <Plus className="w-6 h-6 relative z-10 transition-transform group-hover:rotate-90" />
+        </motion.button>
       </motion.div>
 
       {/* Task Modal */}
