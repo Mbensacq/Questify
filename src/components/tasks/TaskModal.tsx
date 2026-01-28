@@ -233,7 +233,7 @@ export const TaskModal: React.FC<TaskModalProps> = ({
       title={editTask ? 'Modifier la tâche' : 'Nouvelle tâche'}
       size="xl"
     >
-      <form onSubmit={handleSubmit} className="space-y-5">
+      <form onSubmit={handleSubmit} noValidate className="space-y-5">
         {/* Error Banner */}
         <AnimatePresence>
           {errors.general && (
@@ -300,6 +300,7 @@ export const TaskModal: React.FC<TaskModalProps> = ({
             type="datetime-local"
             value={formData.dueDate}
             onChange={(e) => setFormData({ ...formData, dueDate: e.target.value })}
+            required={false}
           />
         </div>
 
