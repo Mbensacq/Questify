@@ -16,6 +16,7 @@ import {
 import { useAuthStore } from '../stores/authStore';
 import { ACHIEVEMENTS, ACHIEVEMENT_CATEGORIES, AchievementRarity } from '../config/achievements';
 import { Card, StatCard } from '../components/ui/Card';
+import { AchievementCard } from '../components/achievements/AchievementCard';
 import { Input } from '../components/ui/Input';
 import { ProgressBar } from '../components/ui/ProgressBar';
 import { cn, formatNumber } from '../utils/helpers';
@@ -184,101 +185,44 @@ export const AchievementsPage: React.FC = () => {
       </div>
 
       {/* Achievement Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-4">
         {filteredAchievements.map((achievement, index) => {
           const isUnlocked = gameStats.achievementsUnlocked.includes(achievement.id);
-          const progress = isUnlocked ? 100 : 0;
+          
+          // Calculate progress based on requirement type
+          let progress = 0;
+          switch (achievement.requirement.type) {
+            case 'tasks_completed':
+              progress = gameStats.tasksCompleted;
+              break;
+            case 'streak':
+              progress = gameStats.currentStreak;
+              break;
+            case 'level':
+              progress = gameStats.level;
+              break;
+            case 'total_xp':
+              progress = gameStats.totalXP;
+              break;
+            case 'achievements':
+              progress = gameStats.achievementsUnlocked.length;
+              break;
+            default:
+              progress = 0;
+          }
 
           return (
             <motion.div
               key={achievement.id}
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: index * 0.05 }}
+              transition={{ delay: index * 0.03 }}
             >
-              <Card
-                className={cn(
-                  'relative overflow-hidden border-2 transition-all',
-                  isUnlocked
-                    ? rarityBorderColors[achievement.rarity]
-                    : 'border-gray-200 dark:border-gray-700 opacity-75',
-                  isUnlocked && 'hover:shadow-lg'
-                )}
-              >
-                {/* Rarity indicator */}
-                <div
-                  className={cn(
-                    'absolute top-0 right-0 w-16 h-16 -mr-8 -mt-8 rounded-full bg-gradient-to-br opacity-20',
-                    rarityColors[achievement.rarity]
-                  )}
-                />
-
-                <div className="flex items-start gap-4">
-                  {/* Icon */}
-                  <div
-                    className={cn(
-                      'w-14 h-14 rounded-xl flex items-center justify-center text-2xl flex-shrink-0',
-                      isUnlocked
-                        ? `bg-gradient-to-br ${rarityColors[achievement.rarity]} shadow-lg`
-                        : 'bg-gray-200 dark:bg-gray-700'
-                    )}
-                  >
-                    {isUnlocked ? (
-                      achievement.icon
-                    ) : (
-                      <Lock className="w-6 h-6 text-gray-400" />
-                    )}
-                  </div>
-
-                  {/* Content */}
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2">
-                      <h3 className={cn(
-                        'font-semibold truncate',
-                        !isUnlocked && 'text-gray-500'
-                      )}>
-                        {achievement.name}
-                      </h3>
-                      {achievement.rarity === 'legendary' && (
-                        <Crown className="w-4 h-4 text-yellow-500 flex-shrink-0" />
-                      )}
-                    </div>
-                    <p className="text-sm text-gray-500 line-clamp-2 mt-1">
-                      {achievement.description}
-                    </p>
-
-                    {/* XP Reward */}
-                    <div className="flex items-center gap-2 mt-2">
-                      <span className={cn(
-                        'text-xs px-2 py-0.5 rounded-full',
-                        isUnlocked
-                          ? 'bg-primary-100 dark:bg-primary-900/30 text-primary-600'
-                          : 'bg-gray-100 dark:bg-gray-700 text-gray-500'
-                      )}>
-                        +{achievement.xpReward} XP
-                      </span>
-                      {achievement.coinReward && (
-                        <span className="text-xs px-2 py-0.5 rounded-full bg-yellow-100 dark:bg-yellow-900/30 text-yellow-600">
-                          +{achievement.coinReward} 🪙
-                        </span>
-                      )}
-                    </div>
-
-                    {/* Progress */}
-                    {!isUnlocked && progress > 0 && (
-                      <div className="mt-3">
-                        <ProgressBar
-                          value={progress}
-                          max={100}
-                          size="sm"
-                          color="primary"
-                          showLabel
-                        />
-                      </div>
-                    )}
-                  </div>
-                </div>
-              </Card>
+              <AchievementCard
+                achievement={achievement}
+                isUnlocked={isUnlocked}
+                progress={progress}
+              />
             </motion.div>
           );
         })}

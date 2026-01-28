@@ -257,6 +257,23 @@ export const useTaskStore = create<TaskState>()(
         await authStore.incrementStat('weeklyTasksCompleted');
         await authStore.updateStreak();
 
+        // Vérifier les achievements liés aux tâches
+        const { ACHIEVEMENTS } = await import('../config/achievements');
+        const gameStats = useAuthStore.getState().gameStats;
+        
+        if (gameStats) {
+          const tasksCompleted = gameStats.tasksCompleted;
+          
+          // Vérifier chaque achievement de type tasks_completed
+          for (const achievement of ACHIEVEMENTS) {
+            if (achievement.requirement.type === 'tasks_completed' &&
+                tasksCompleted >= achievement.requirement.value &&
+                !gameStats.achievementsUnlocked.includes(achievement.id)) {
+              await authStore.unlockAchievement(achievement.id);
+            }
+          }
+        }
+
         // Mettre à jour les quêtes
         const { useQuestStore } = await import('./questStore');
         await useQuestStore.getState().checkAndUpdateQuests('task_completed', {

@@ -436,6 +436,22 @@ export const useAuthStore = create<AuthState>()(
         }
         set({ gameStats: { ...gameStats, ...updates } });
 
+        // Vérifier les achievements liés au niveau
+        if (leveledUp) {
+          const { ACHIEVEMENTS } = await import('../config/achievements');
+          const updatedGameStats = get().gameStats;
+          
+          if (updatedGameStats) {
+            for (const achievement of ACHIEVEMENTS) {
+              if (achievement.requirement.type === 'level' &&
+                  newLevel >= achievement.requirement.value &&
+                  !updatedGameStats.achievementsUnlocked.includes(achievement.id)) {
+                await get().unlockAchievement(achievement.id);
+              }
+            }
+          }
+        }
+
         // Mettre à jour les quêtes liées à l'XP
         const { useQuestStore } = await import('./questStore');
         await useQuestStore.getState().checkAndUpdateQuests('xp_gained', {
@@ -480,6 +496,20 @@ export const useAuthStore = create<AuthState>()(
           await updateDoc(doc(db, 'gameStats', user.id), updates);
         }
         set({ gameStats: { ...gameStats, ...updates } });
+
+        // Vérifier les achievements liés aux streaks
+        const { ACHIEVEMENTS } = await import('../config/achievements');
+        const updatedGameStats = get().gameStats;
+        
+        if (updatedGameStats) {
+          for (const achievement of ACHIEVEMENTS) {
+            if (achievement.requirement.type === 'streak' &&
+                newStreak >= achievement.requirement.value &&
+                !updatedGameStats.achievementsUnlocked.includes(achievement.id)) {
+              await get().unlockAchievement(achievement.id);
+            }
+          }
+        }
 
         // Mettre à jour les quêtes liées au streak
         const { useQuestStore } = await import('./questStore');
@@ -555,9 +585,20 @@ export const useAuthStore = create<AuthState>()(
         if (!gameStats || !user) return;
         if (gameStats.achievementsUnlocked.includes(achievementId)) return;
 
+        // Get achievement rewards
+        const { ACHIEVEMENTS } = await import('../config/achievements');
+        const achievement = ACHIEVEMENTS.find(a => a.id === achievementId);
+        
         const updates = {
           achievementsUnlocked: [...gameStats.achievementsUnlocked, achievementId],
+          // Add achievement rewards
+          ...(achievement ? {
+            totalXP: gameStats.totalXP + achievement.xpReward,
+            coins: gameStats.coins + achievement.coinReward,
+            achievementPoints: gameStats.achievementPoints + achievement.xpReward,
+          } : {}),
         };
+        
         if (!isDemo) {
           await updateDoc(doc(db, 'gameStats', user.id), updates);
         }

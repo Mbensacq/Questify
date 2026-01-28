@@ -75,31 +75,31 @@ export const TaskCard: React.FC<TaskCardProps> = ({
       <Card
         variant="game"
         className={cn(
-          'p-4 relative overflow-hidden transition-shadow duration-200 hover:shadow-soft-lg',
+          'p-3 sm:p-4 relative overflow-hidden transition-shadow duration-200 hover:shadow-soft-lg',
           isCompleted && 'opacity-60',
           isOverdue && 'border-l-4 border-l-red-500'
         )}
       >
         {/* Priority indicator */}
         <div
-          className="absolute top-0 right-0 w-16 h-16 -mr-8 -mt-8 rounded-full opacity-20"
+          className="absolute top-0 right-0 w-12 sm:w-16 h-12 sm:h-16 -mr-6 sm:-mr-8 -mt-6 sm:-mt-8 rounded-full opacity-20"
           style={{ backgroundColor: getPriorityColor(task.priority) }}
         />
 
-        <div className="flex items-start gap-3">
+        <div className="flex items-start gap-2 sm:gap-3">
           {/* Checkbox */}
           <button
             onClick={handleComplete}
             disabled={isCompleted}
             className={cn(
-              'flex-shrink-0 mt-0.5 transition-colors',
+              'flex-shrink-0 mt-0.5 transition-colors touch-manipulation',
               isCompleted ? 'text-green-500' : 'text-gray-400 hover:text-green-500'
             )}
           >
             {isCompleted ? (
-              <CheckCircle2 className="w-6 h-6" />
+              <CheckCircle2 className="w-5 h-5 sm:w-6 sm:h-6" />
             ) : (
-              <Circle className="w-6 h-6" />
+              <Circle className="w-5 h-5 sm:w-6 sm:h-6" />
             )}
           </button>
 
@@ -108,7 +108,7 @@ export const TaskCard: React.FC<TaskCardProps> = ({
             <div className="flex items-start justify-between gap-2">
               <h3 
                 className={cn(
-                  'font-medium text-gray-900 dark:text-white',
+                  'font-medium text-sm sm:text-base text-gray-900 dark:text-white line-clamp-2',
                   isCompleted && 'line-through text-gray-500'
                 )}
               >
@@ -116,10 +116,10 @@ export const TaskCard: React.FC<TaskCardProps> = ({
               </h3>
               
               {/* Menu */}
-              <div className="relative">
+              <div className="relative flex-shrink-0">
                 <button
                   onClick={() => setShowMenu(!showMenu)}
-                  className="p-1 rounded hover:bg-gray-100 dark:hover:bg-gray-700"
+                  className="p-1.5 rounded hover:bg-gray-100 dark:hover:bg-gray-700 touch-manipulation"
                 >
                   <MoreVertical className="w-4 h-4 text-gray-400" />
                 </button>
@@ -130,23 +130,23 @@ export const TaskCard: React.FC<TaskCardProps> = ({
                       initial={{ opacity: 0, scale: 0.95 }}
                       animate={{ opacity: 1, scale: 1 }}
                       exit={{ opacity: 0, scale: 0.95 }}
-                      className="absolute right-0 top-full mt-1 w-40 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 py-1 z-10"
+                      className="absolute right-0 top-full mt-1 w-36 sm:w-40 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 py-1 z-10"
                     >
                       <button
                         onClick={() => { selectTask(task); setShowMenu(false); }}
-                        className="w-full px-3 py-2 text-left text-sm hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center gap-2"
+                        className="w-full px-3 py-2.5 text-left text-sm hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center gap-2 touch-manipulation"
                       >
                         <Edit2 className="w-4 h-4" /> Modifier
                       </button>
                       <button
                         onClick={() => { archiveTask(task.id); setShowMenu(false); }}
-                        className="w-full px-3 py-2 text-left text-sm hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center gap-2"
+                        className="w-full px-3 py-2.5 text-left text-sm hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center gap-2 touch-manipulation"
                       >
                         <Archive className="w-4 h-4" /> Archiver
                       </button>
                       <button
                         onClick={() => { deleteTask(task.id); setShowMenu(false); }}
-                        className="w-full px-3 py-2 text-left text-sm text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 flex items-center gap-2"
+                        className="w-full px-3 py-2.5 text-left text-sm text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 flex items-center gap-2 touch-manipulation"
                       >
                         <Trash2 className="w-4 h-4" /> Supprimer
                       </button>
@@ -158,17 +158,17 @@ export const TaskCard: React.FC<TaskCardProps> = ({
 
             {/* Description */}
             {task.description && !compact && (
-              <p className="text-sm text-gray-500 dark:text-gray-400 mt-1 line-clamp-2">
+              <p className="text-xs sm:text-sm text-gray-500 dark:text-gray-400 mt-1 line-clamp-2">
                 {task.description}
               </p>
             )}
 
             {/* Badges */}
-            <div className="flex flex-wrap items-center gap-2 mt-2">
+            <div className="flex flex-wrap items-center gap-1.5 sm:gap-2 mt-2">
               <PriorityBadge priority={task.priority} />
-              <DifficultyBadge difficulty={task.difficulty} />
+              {!compact && <DifficultyBadge difficulty={task.difficulty} />}
               
-              {task.category && (
+              {task.category && !compact && (
                 <Badge variant="default" size="sm">
                   {task.category}
                 </Badge>
@@ -176,16 +176,16 @@ export const TaskCard: React.FC<TaskCardProps> = ({
             </div>
 
             {/* Subtasks */}
-            {task.subtasks.length > 0 && (
-              <div className="mt-3">
+            {task.subtasks.length > 0 && !compact && (
+              <div className="mt-2 sm:mt-3">
                 <button
                   onClick={() => setShowSubtasks(!showSubtasks)}
-                  className="flex items-center gap-1 text-sm text-gray-500 hover:text-gray-700 dark:hover:text-gray-300"
+                  className="flex items-center gap-1 text-xs sm:text-sm text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 touch-manipulation"
                 >
                   {showSubtasks ? (
-                    <ChevronDown className="w-4 h-4" />
+                    <ChevronDown className="w-3 h-3 sm:w-4 sm:h-4" />
                   ) : (
-                    <ChevronRight className="w-4 h-4" />
+                    <ChevronRight className="w-3 h-3 sm:w-4 sm:h-4" />
                   )}
                   <span>{completedSubtasks}/{task.subtasks.length} sous-tâches</span>
                 </button>
@@ -210,22 +210,23 @@ export const TaskCard: React.FC<TaskCardProps> = ({
                       {task.subtasks.map((subtask) => (
                         <div
                           key={subtask.id}
-                          className="flex items-center gap-2 text-sm"
+                          className="flex items-center gap-2 text-xs sm:text-sm"
                         >
                           <button
                             onClick={() => handleSubtaskToggle(subtask.id)}
                             className={cn(
-                              'flex-shrink-0',
+                              'flex-shrink-0 touch-manipulation',
                               subtask.completed ? 'text-green-500' : 'text-gray-400 hover:text-green-500'
                             )}
                           >
                             {subtask.completed ? (
-                              <CheckCircle2 className="w-4 h-4" />
+                              <CheckCircle2 className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                             ) : (
-                              <Circle className="w-4 h-4" />
+                              <Circle className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                             )}
                           </button>
                           <span className={cn(
+                            'truncate',
                             subtask.completed && 'line-through text-gray-400'
                           )}>
                             {subtask.title}
@@ -239,28 +240,28 @@ export const TaskCard: React.FC<TaskCardProps> = ({
             )}
 
             {/* Footer */}
-            <div className="flex items-center justify-between mt-3 pt-3 border-t border-gray-100 dark:border-gray-700">
-              <div className="flex items-center gap-3 text-sm text-gray-500">
+            <div className="flex items-center justify-between mt-2 sm:mt-3 pt-2 sm:pt-3 border-t border-gray-100 dark:border-gray-700">
+              <div className="flex items-center gap-2 sm:gap-3 text-xs sm:text-sm text-gray-500 min-w-0">
                 {task.dueDate && (
                   <span className={cn(
-                    'flex items-center gap-1',
+                    'flex items-center gap-1 truncate',
                     isOverdue && 'text-red-500'
                   )}>
-                    <Calendar className="w-4 h-4" />
-                    {formatRelativeDate(task.dueDate)}
+                    <Calendar className="w-3 h-3 sm:w-4 sm:h-4 flex-shrink-0" />
+                    <span className="truncate">{formatRelativeDate(task.dueDate)}</span>
                   </span>
                 )}
-                {task.estimatedTime && (
+                {task.estimatedTime && !compact && (
                   <span className="flex items-center gap-1">
-                    <Clock className="w-4 h-4" />
+                    <Clock className="w-3 h-3 sm:w-4 sm:h-4" />
                     {task.estimatedTime}m
                   </span>
                 )}
               </div>
               
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-1.5 sm:gap-2 flex-shrink-0">
                 <XPBadge amount={task.xpReward} />
-                <CoinBadge amount={task.coinReward} />
+                {!compact && <CoinBadge amount={task.coinReward} />}
               </div>
             </div>
           </div>

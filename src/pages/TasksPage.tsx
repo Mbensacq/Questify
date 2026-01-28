@@ -137,33 +137,33 @@ export const TasksPage: React.FC = () => {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-6 px-1 sm:px-0">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4">
         <div>
-          <h1 className="text-2xl font-bold flex items-center gap-2">
-            <ListTodo className="w-7 h-7 text-primary-500" />
+          <h1 className="text-xl sm:text-2xl font-bold flex items-center gap-2">
+            <ListTodo className="w-6 h-6 sm:w-7 sm:h-7 text-primary-500" />
             Mes Tâches
           </h1>
-          <p className="text-gray-500 mt-1">
+          <p className="text-gray-500 mt-1 text-sm">
             {filteredTasks.length} tâche{filteredTasks.length > 1 ? 's' : ''}
           </p>
         </div>
 
-        <Button variant="game" onClick={openTaskModal}>
+        <Button variant="game" onClick={openTaskModal} className="w-full sm:w-auto">
           <Plus className="w-5 h-5 mr-1" />
           Nouvelle tâche
         </Button>
       </div>
 
       {/* Search and Filters */}
-      <div className="flex flex-col sm:flex-row gap-4">
+      <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
         <div className="flex-1">
           <Input
-            placeholder="Rechercher une tâche..."
+            placeholder="Rechercher..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            leftIcon={<Search className="w-5 h-5" />}
+            leftIcon={<Search className="w-4 h-4 sm:w-5 sm:h-5" />}
           />
         </div>
 
@@ -171,8 +171,10 @@ export const TasksPage: React.FC = () => {
           <Button
             variant="secondary"
             onClick={() => setShowFilters(!showFilters)}
+            className="flex-1 sm:flex-none"
           >
-            <Filter className="w-5 h-5" />
+            <Filter className="w-4 h-4 sm:w-5 sm:h-5" />
+            <span className="sm:hidden ml-2">Filtres</span>
           </Button>
         </div>
       </div>
@@ -184,18 +186,18 @@ export const TasksPage: React.FC = () => {
             initial={{ opacity: 0, height: 0 }}
             animate={{ opacity: 1, height: 'auto' }}
             exit={{ opacity: 0, height: 0 }}
-            className="bg-white dark:bg-gray-800 rounded-xl p-4 border border-gray-200 dark:border-gray-700"
+            className="bg-white dark:bg-gray-800 rounded-xl p-3 sm:p-4 border border-gray-200 dark:border-gray-700 overflow-hidden"
           >
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
               {/* Status Filter */}
               <div>
-                <label className="text-sm font-medium text-gray-600 dark:text-gray-400 mb-2 block">
+                <label className="text-xs sm:text-sm font-medium text-gray-600 dark:text-gray-400 mb-1.5 sm:mb-2 block">
                   Statut
                 </label>
                 <select
                   value={filter.status}
                   onChange={(e) => setFilter({ status: e.target.value as any })}
-                  className="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700"
+                  className="w-full px-2 sm:px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-sm"
                 >
                   <option value="all">Toutes</option>
                   <option value="pending">En attente</option>
@@ -206,13 +208,13 @@ export const TasksPage: React.FC = () => {
 
               {/* Priority Filter */}
               <div>
-                <label className="text-sm font-medium text-gray-600 dark:text-gray-400 mb-2 block">
+                <label className="text-xs sm:text-sm font-medium text-gray-600 dark:text-gray-400 mb-1.5 sm:mb-2 block">
                   Priorité
                 </label>
                 <select
                   value={filter.priority || ''}
                   onChange={(e) => setFilter({ priority: e.target.value as any || undefined })}
-                  className="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700"
+                  className="w-full px-2 sm:px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-sm"
                 >
                   <option value="">Toutes</option>
                   <option value="high">Haute</option>
@@ -223,13 +225,13 @@ export const TasksPage: React.FC = () => {
 
               {/* Category Filter */}
               <div>
-                <label className="text-sm font-medium text-gray-600 dark:text-gray-400 mb-2 block">
+                <label className="text-xs sm:text-sm font-medium text-gray-600 dark:text-gray-400 mb-1.5 sm:mb-2 block">
                   Catégorie
                 </label>
                 <select
                   value={filter.categoryId || ''}
                   onChange={(e) => setFilter({ categoryId: e.target.value || undefined })}
-                  className="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700"
+                  className="w-full px-2 sm:px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-sm"
                 >
                   <option value="">Toutes</option>
                   {categories.map((cat) => (
@@ -242,13 +244,13 @@ export const TasksPage: React.FC = () => {
 
               {/* Group By */}
               <div>
-                <label className="text-sm font-medium text-gray-600 dark:text-gray-400 mb-2 block">
+                <label className="text-xs sm:text-sm font-medium text-gray-600 dark:text-gray-400 mb-1.5 sm:mb-2 block">
                   Grouper par
                 </label>
                 <select
                   value={groupBy}
                   onChange={(e) => setGroupBy(e.target.value as GroupBy)}
-                  className="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700"
+                  className="w-full px-2 sm:px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-sm"
                 >
                   <option value="none">Aucun</option>
                   <option value="category">Catégorie</option>
@@ -263,19 +265,19 @@ export const TasksPage: React.FC = () => {
 
       {/* Tasks List */}
       {filteredTasks.length > 0 ? (
-        <div className="space-y-6">
+        <div className="space-y-4 sm:space-y-6">
           {Object.entries(groupedTasks).map(([group, tasks]) => (
             <div key={group}>
               {groupBy !== 'none' && (
-                <h3 className="font-medium text-gray-600 dark:text-gray-400 mb-3 flex items-center gap-2">
+                <h3 className="font-medium text-gray-600 dark:text-gray-400 mb-2 sm:mb-3 flex items-center gap-2 text-sm sm:text-base">
                   <FolderOpen className="w-4 h-4" />
                   {group}
-                  <span className="text-sm bg-gray-100 dark:bg-gray-800 px-2 py-0.5 rounded-full">
+                  <span className="text-xs sm:text-sm bg-gray-100 dark:bg-gray-800 px-2 py-0.5 rounded-full">
                     {tasks.length}
                   </span>
                 </h3>
               )}
-              <div className="space-y-3">
+              <div className="space-y-2 sm:space-y-3">
                 {tasks.map((task) => (
                   <TaskCard
                     key={task.id}
@@ -290,13 +292,13 @@ export const TasksPage: React.FC = () => {
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
-          className="text-center py-16"
+          className="text-center py-12 sm:py-16"
         >
-          <div className="w-24 h-24 rounded-full bg-gray-100 dark:bg-gray-800 mx-auto flex items-center justify-center mb-4">
-            <CheckCircle2 className="w-12 h-12 text-gray-400" />
+          <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-full bg-gray-100 dark:bg-gray-800 mx-auto flex items-center justify-center mb-4">
+            <CheckCircle2 className="w-10 h-10 sm:w-12 sm:h-12 text-gray-400" />
           </div>
-          <h3 className="text-xl font-medium mb-2">Aucune tâche trouvée</h3>
-          <p className="text-gray-500 mb-4">
+          <h3 className="text-lg sm:text-xl font-medium mb-2">Aucune tâche trouvée</h3>
+          <p className="text-gray-500 mb-4 text-sm sm:text-base px-4">
             {searchQuery
               ? 'Essayez de modifier votre recherche'
               : 'Créez votre première tâche pour commencer!'}
@@ -309,4 +311,4 @@ export const TasksPage: React.FC = () => {
       )}
     </div>
   );
-};
+};;

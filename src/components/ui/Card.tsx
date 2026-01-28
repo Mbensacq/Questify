@@ -60,23 +60,23 @@ export const StatCard: React.FC<StatCardProps> = ({
   trend,
 }) => {
   return (
-    <Card className="p-4 hover:shadow-md transition-all duration-200" hoverable>
-      <div className="flex items-center gap-3">
+    <Card className="p-3 sm:p-4 hover:shadow-md transition-all duration-200" hoverable>
+      <div className="flex items-center gap-2 sm:gap-3">
         <div 
           className={cn(
-            'w-11 h-11 rounded-xl flex items-center justify-center flex-shrink-0',
+            'w-9 h-9 sm:w-11 sm:h-11 rounded-xl flex items-center justify-center flex-shrink-0',
             `bg-${color}-100 dark:bg-${color}-900/30`
           )}
         >
           {icon}
         </div>
         <div className="flex-1 min-w-0">
-          <p className="text-xs text-gray-500 dark:text-gray-400 truncate">{label}</p>
-          <p className="text-lg font-bold text-gray-900 dark:text-white truncate">{value}</p>
+          <p className="text-[10px] sm:text-xs text-gray-500 dark:text-gray-400 truncate leading-tight">{label}</p>
+          <p className="text-sm sm:text-lg font-bold text-gray-900 dark:text-white truncate">{value}</p>
         </div>
         {trend && (
           <div className={cn(
-            'px-2 py-1 rounded-lg text-xs font-medium',
+            'px-2 py-1 rounded-lg text-xs font-medium hidden sm:block',
             trend.isPositive 
               ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400'
               : 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400'
