@@ -1,0 +1,45 @@
+{
+  "name": "Questify",
+  "short_name": "Questify",
+  "description": "Transformez vos tâches en aventure épique - Application de gestion de tâches gamifiée",
+  "start_url": ".",
+  "scope": ".",
+  "id": "/",
+  "display": "standalone",
+  "display_override": ["window-controls-overlay", "standalone"],
+  "background_color": "#0f172a",
+  "theme_color": "#14b8a6",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    },
+    {
+      "src": "favicon.svg",
+      "sizes": "512x512",
+      "type": "image/svg+xml",
+      "purpose": "maskable"
+    }
+  ],
+  "categories": ["productivity", "games"],
+  "shortcuts": [
+    {
+      "name": "Nouvelle tâche",
+      "short_name": "Tâche",
+      "description": "Créer une nouvelle tâche",
+      "url": "./#/tasks"
+    },
+    {
+      "name": "Quêtes",
+      "short_name": "Quêtes", 
+      "description": "Voir les quêtes actives",
+      "url": "./#/quests"
+    }
+  ],
+  "launch_handler": {
+    "client_mode": "navigate-existing"
+  }
+}
