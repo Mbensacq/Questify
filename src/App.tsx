@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { HashRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
 import { useAuthStore } from './stores/authStore';
 import { useTaskStore } from './stores/taskStore';
@@ -111,7 +111,7 @@ function App() {
   }
 
   return (
-    <BrowserRouter>
+    <HashRouter>
       <Routes>
         {/* Auth Route */}
         <Route
@@ -165,7 +165,7 @@ function App() {
           },
         }}
       />
-    </BrowserRouter>
+    </HashRouter>
   );
 }
 
