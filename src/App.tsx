@@ -33,9 +33,9 @@ const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) =
 
 // Loading Screen
 const LoadingScreen: React.FC = () => (
-  <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-teal-900 via-cyan-900 to-gray-900">
+  <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900">
     <div className="text-center">
-      <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-teal-500 to-cyan-500 flex items-center justify-center mx-auto mb-4 animate-pulse">
+      <div className="w-20 h-20 rounded-2xl bg-accent-gradient-br flex items-center justify-center mx-auto mb-4 animate-pulse">
         <Sparkles className="w-10 h-10 text-white" />
       </div>
       <h1 className="text-2xl font-bold text-white">Questify</h1>
@@ -46,7 +46,7 @@ const LoadingScreen: React.FC = () => (
 
 function App() {
   const { initializeAuth, user } = useAuthStore();
-  const { theme, setIsMobile } = useUIStore();
+  const { theme, accentColor, setIsMobile } = useUIStore();
   const { loadQuests } = useQuestStore();
   const { loadTasks, loadCategories } = useTaskStore();
   const [isInitialized, setIsInitialized] = useState(false);
@@ -83,6 +83,15 @@ function App() {
       root.classList.toggle('dark', theme === 'dark');
     }
   }, [theme]);
+
+  // Handle accent color changes
+  useEffect(() => {
+    const root = document.documentElement;
+    // Remove all accent classes
+    root.classList.remove('accent-teal', 'accent-blue', 'accent-purple', 'accent-green', 'accent-orange');
+    // Add new accent class
+    root.classList.add(`accent-${accentColor}`);
+  }, [accentColor]);
 
   // Handle mobile detection
   useEffect(() => {

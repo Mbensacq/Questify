@@ -50,10 +50,10 @@ export const Layout: React.FC = () => {
           whileHover={{ scale: 1.05 }}
           whileTap={{ scale: 0.95 }}
           onClick={openTaskModal}
-          className="relative w-14 h-14 rounded-2xl bg-gradient-to-br from-teal-500 to-cyan-500 text-white shadow-lg shadow-teal-500/30 flex items-center justify-center group"
+          className="relative w-14 h-14 rounded-2xl bg-accent-gradient-br text-white shadow-lg shadow-accent flex items-center justify-center group"
         >
           {/* Pulse effect */}
-          <span className="absolute inset-0 rounded-2xl bg-gradient-to-br from-teal-500 to-cyan-500 animate-ping opacity-20" />
+          <span className="absolute inset-0 rounded-2xl bg-accent-gradient-br animate-ping opacity-20" />
           <Plus className="w-6 h-6 relative z-10 transition-transform group-hover:rotate-90" />
         </motion.button>
       </motion.div>

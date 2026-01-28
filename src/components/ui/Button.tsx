@@ -23,13 +23,13 @@ export const Button: React.FC<ButtonProps> = ({
   const baseStyles = 'inline-flex items-center justify-center font-medium rounded-2xl transition-colors duration-150 focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed shadow-soft hover:shadow-soft-lg';
   
   const variants = {
-    primary: 'bg-gradient-to-r from-primary-400 to-primary-500 text-white hover:from-primary-500 hover:to-primary-600 focus:ring-primary-400',
+    primary: 'bg-accent-gradient text-white hover:opacity-90 focus:ring-2',
     secondary: 'bg-gradient-to-r from-gray-100 to-gray-200 dark:from-gray-700 dark:to-gray-600 text-gray-800 dark:text-gray-200 hover:from-gray-200 hover:to-gray-300 dark:hover:from-gray-600 dark:hover:to-gray-500 focus:ring-gray-400',
     danger: 'bg-gradient-to-r from-red-400 to-red-500 text-white hover:from-red-500 hover:to-red-600 focus:ring-red-400',
     success: 'bg-gradient-to-r from-green-400 to-green-500 text-white hover:from-green-500 hover:to-green-600 focus:ring-green-400',
-    game: 'bg-gradient-to-r from-teal-400 via-cyan-400 to-blue-400 text-white hover:from-teal-500 hover:via-cyan-500 hover:to-blue-500 shadow-lg hover:shadow-xl',
+    game: 'bg-accent-gradient text-white hover:opacity-90 shadow-lg hover:shadow-xl',
     ghost: 'bg-transparent hover:bg-gradient-to-r hover:from-gray-50 hover:to-gray-100 dark:hover:from-gray-800 dark:hover:to-gray-700 text-gray-600 dark:text-gray-400',
-    outline: 'bg-transparent border-2 border-primary-300 dark:border-primary-600 text-primary-600 dark:text-primary-300 hover:bg-gradient-to-r hover:from-primary-50 hover:to-primary-100 dark:hover:from-primary-900/30 dark:hover:to-primary-800/30 focus:ring-primary-400',
+    outline: 'bg-transparent border-2 border-accent text-accent hover:bg-[var(--color-accent-50)] dark:hover:bg-[var(--color-accent-900)]/30 focus:ring-2',
   };
   
   const sizes = {

@@ -86,7 +86,7 @@ export const Sidebar: React.FC = () => {
                 exit={{ opacity: 0 }}
                 className="flex items-center gap-3"
               >
-                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-teal-500 to-cyan-500 flex items-center justify-center shadow-md">
+                <div className="w-10 h-10 rounded-xl bg-accent-gradient-br flex items-center justify-center shadow-md">
                   <Sparkles className="w-5 h-5 text-white" />
                 </div>
                 <span className="font-bold text-lg text-gray-900 dark:text-white">Questify</span>
@@ -151,7 +151,7 @@ export const Sidebar: React.FC = () => {
                 cn(
                   'flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-200',
                   'hover:bg-gray-100 dark:hover:bg-gray-800',
-                  isActive && 'bg-teal-50 dark:bg-teal-900/30 text-teal-600 dark:text-teal-400 font-medium',
+                  isActive && 'bg-[var(--color-accent-50)] dark:bg-[var(--color-accent-900)]/30 text-accent font-medium',
                   !isActive && 'text-gray-600 dark:text-gray-400',
                   !sidebarOpen && 'justify-center'
                 )
@@ -218,7 +218,7 @@ export const BottomNav: React.FC = () => {
               {isActive && (
                 <motion.div
                   layoutId="bottomNavIndicator"
-                  className="absolute inset-x-2 top-1 h-1 bg-gradient-to-r from-teal-500 to-cyan-500 rounded-full"
+                  className="absolute inset-x-2 top-1 h-1 bg-accent-gradient rounded-full"
                   transition={{ type: 'spring', stiffness: 500, damping: 30 }}
                 />
               )}
@@ -228,7 +228,7 @@ export const BottomNav: React.FC = () => {
                 className={cn(
                   'p-1.5 rounded-xl transition-colors duration-200',
                   isActive 
-                    ? 'text-teal-600 dark:text-teal-400' 
+                    ? 'text-accent' 
                     : 'text-gray-400 dark:text-gray-500 group-hover:text-gray-600 dark:group-hover:text-gray-300'
                 )}
               >
@@ -238,7 +238,7 @@ export const BottomNav: React.FC = () => {
               <span className={cn(
                 'text-[10px] font-medium transition-colors duration-200',
                 isActive 
-                  ? 'text-teal-600 dark:text-teal-400' 
+                  ? 'text-accent' 
                   : 'text-gray-400 dark:text-gray-500'
               )}>
                 {item.label}

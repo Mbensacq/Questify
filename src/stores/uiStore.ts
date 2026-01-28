@@ -55,6 +55,10 @@ interface UIState {
   theme: 'light' | 'dark' | 'system';
   setTheme: (theme: 'light' | 'dark' | 'system') => void;
   
+  // Accent Color
+  accentColor: 'teal' | 'blue' | 'purple' | 'green' | 'orange';
+  setAccentColor: (color: 'teal' | 'blue' | 'purple' | 'green' | 'orange') => void;
+  
   // Sound
   soundEnabled: boolean;
   toggleSound: () => void;
@@ -119,6 +123,10 @@ export const useUIStore = create<UIState>()(
       theme: 'dark',
       setTheme: (theme) => set({ theme }),
       
+      // Accent Color
+      accentColor: 'teal',
+      setAccentColor: (color) => set({ accentColor: color }),
+      
       // Sound
       soundEnabled: true,
       toggleSound: () => set((state) => ({ soundEnabled: !state.soundEnabled })),
@@ -133,6 +141,7 @@ export const useUIStore = create<UIState>()(
         sidebarOpen: state.sidebarOpen,
         viewMode: state.viewMode,
         theme: state.theme,
+        accentColor: state.accentColor,
         soundEnabled: state.soundEnabled,
         notificationsEnabled: state.notificationsEnabled,
       }),

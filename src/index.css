@@ -4,21 +4,116 @@
 
 @layer base {
   :root {
-    --color-bg-primary: #f8fafa;
-    --color-bg-secondary: #f0f7f7;
-    --color-bg-tertiary: #e8f4f4;
-    --color-text-primary: #1a2e2e;
-    --color-text-secondary: #3d5a5a;
-    --color-text-muted: #6b8a8a;
+    --color-bg-primary: #ffffff;
+    --color-bg-secondary: #f9fafb;
+    --color-bg-tertiary: #f3f4f6;
+    --color-text-primary: #111827;
+    --color-text-secondary: #4b5563;
+    --color-text-muted: #9ca3af;
+    --color-border: #e5e7eb;
+    --color-border-strong: #d1d5db;
+    
+    /* Accent colors - default teal */
+    --color-accent-50: #f0fdfa;
+    --color-accent-100: #ccfbf1;
+    --color-accent-200: #99f6e4;
+    --color-accent-300: #5eead4;
+    --color-accent-400: #2dd4bf;
+    --color-accent-500: #14b8a6;
+    --color-accent-600: #0d9488;
+    --color-accent-700: #0f766e;
+    --color-accent-800: #115e59;
+    --color-accent-900: #134e4a;
+    
+    --color-accent-gradient-from: #14b8a6;
+    --color-accent-gradient-to: #06b6d4;
   }
 
   .dark {
-    --color-bg-primary: #0c1414;
-    --color-bg-secondary: #111c1c;
-    --color-bg-tertiary: #162626;
-    --color-text-primary: #e8f5f5;
-    --color-text-secondary: #c5dada;
-    --color-text-muted: #8aabab;
+    --color-bg-primary: #0f172a;
+    --color-bg-secondary: #1e293b;
+    --color-bg-tertiary: #334155;
+    --color-text-primary: #f1f5f9;
+    --color-text-secondary: #cbd5e1;
+    --color-text-muted: #94a3b8;
+    --color-border: #334155;
+    --color-border-strong: #475569;
+  }
+
+  /* Accent color themes */
+  .accent-teal {
+    --color-accent-50: #f0fdfa;
+    --color-accent-100: #ccfbf1;
+    --color-accent-200: #99f6e4;
+    --color-accent-300: #5eead4;
+    --color-accent-400: #2dd4bf;
+    --color-accent-500: #14b8a6;
+    --color-accent-600: #0d9488;
+    --color-accent-700: #0f766e;
+    --color-accent-800: #115e59;
+    --color-accent-900: #134e4a;
+    --color-accent-gradient-from: #14b8a6;
+    --color-accent-gradient-to: #06b6d4;
+  }
+
+  .accent-blue {
+    --color-accent-50: #eff6ff;
+    --color-accent-100: #dbeafe;
+    --color-accent-200: #bfdbfe;
+    --color-accent-300: #93c5fd;
+    --color-accent-400: #60a5fa;
+    --color-accent-500: #3b82f6;
+    --color-accent-600: #2563eb;
+    --color-accent-700: #1d4ed8;
+    --color-accent-800: #1e40af;
+    --color-accent-900: #1e3a8a;
+    --color-accent-gradient-from: #3b82f6;
+    --color-accent-gradient-to: #8b5cf6;
+  }
+
+  .accent-purple {
+    --color-accent-50: #faf5ff;
+    --color-accent-100: #f3e8ff;
+    --color-accent-200: #e9d5ff;
+    --color-accent-300: #d8b4fe;
+    --color-accent-400: #c084fc;
+    --color-accent-500: #a855f7;
+    --color-accent-600: #9333ea;
+    --color-accent-700: #7e22ce;
+    --color-accent-800: #6b21a8;
+    --color-accent-900: #581c87;
+    --color-accent-gradient-from: #a855f7;
+    --color-accent-gradient-to: #ec4899;
+  }
+
+  .accent-green {
+    --color-accent-50: #ecfdf5;
+    --color-accent-100: #d1fae5;
+    --color-accent-200: #a7f3d0;
+    --color-accent-300: #6ee7b7;
+    --color-accent-400: #34d399;
+    --color-accent-500: #10b981;
+    --color-accent-600: #059669;
+    --color-accent-700: #047857;
+    --color-accent-800: #065f46;
+    --color-accent-900: #064e3b;
+    --color-accent-gradient-from: #10b981;
+    --color-accent-gradient-to: #22d3ee;
+  }
+
+  .accent-orange {
+    --color-accent-50: #fff7ed;
+    --color-accent-100: #ffedd5;
+    --color-accent-200: #fed7aa;
+    --color-accent-300: #fdba74;
+    --color-accent-400: #fb923c;
+    --color-accent-500: #f97316;
+    --color-accent-600: #ea580c;
+    --color-accent-700: #c2410c;
+    --color-accent-800: #9a3412;
+    --color-accent-900: #7c2d12;
+    --color-accent-gradient-from: #f97316;
+    --color-accent-gradient-to: #ef4444;
   }
 
   html, body, #root {
@@ -54,7 +149,7 @@
   }
 
   * {
-    @apply border-gray-200 dark:border-gray-700;
+    @apply border-[var(--color-border)];
   }
 }
 
@@ -66,13 +161,23 @@
   }
 
   .btn-primary {
-    @apply btn bg-teal-500 text-white hover:bg-teal-600 
-           focus:ring-teal-500 active:bg-teal-700;
+    @apply btn text-white hover:opacity-90 active:opacity-100;
+    background-color: var(--color-accent-500);
+  }
+  .btn-primary:focus {
+    --tw-ring-color: var(--color-accent-500);
+  }
+  .btn-primary:hover {
+    background-color: var(--color-accent-600);
+  }
+  .btn-primary:active {
+    background-color: var(--color-accent-700);
   }
 
   .btn-secondary {
-    @apply btn bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-200 
-           hover:bg-gray-200 dark:hover:bg-gray-600 focus:ring-gray-400;
+    @apply btn bg-[var(--color-bg-tertiary)] text-[var(--color-text-primary)]
+           hover:bg-[var(--color-border)] focus:ring-gray-400
+           border border-[var(--color-border)];
   }
 
   .btn-danger {
@@ -86,29 +191,43 @@
   }
 
   .btn-game {
-    @apply btn bg-gradient-to-r from-teal-500 to-cyan-500 text-white 
-           hover:from-teal-600 hover:to-cyan-600 
-           shadow-lg hover:shadow-xl;
+    @apply btn text-white shadow-lg hover:shadow-xl;
+    background: linear-gradient(to right, var(--color-accent-gradient-from), var(--color-accent-gradient-to));
+  }
+  .btn-game:hover {
+    filter: brightness(1.1);
   }
 
   .card {
-    @apply bg-white dark:bg-gray-800/80 rounded-2xl 
-           border border-gray-100 dark:border-gray-700/50
-           shadow-sm backdrop-blur-sm;
+    @apply rounded-2xl shadow-sm backdrop-blur-sm
+           bg-[var(--color-bg-secondary)] 
+           border border-[var(--color-border-strong)];
+  }
+  
+  /* Light theme specific card styles */
+  :root .card {
+    @apply shadow-md;
   }
 
   .card-game {
-    @apply card bg-gradient-to-br from-white to-gray-50/50 
-           dark:from-gray-800/80 dark:to-gray-900/50
-           hover:shadow-md transition-shadow duration-300;
+    @apply card hover:shadow-lg transition-shadow duration-300;
+    background: linear-gradient(to bottom right, var(--color-bg-secondary), var(--color-bg-tertiary));
   }
 
   .input {
-    @apply w-full px-4 py-2.5 rounded-xl border border-gray-200 dark:border-gray-600
-           bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100
-           focus:outline-none focus:ring-2 focus:ring-teal-500/50 focus:border-teal-500
-           placeholder-gray-400 dark:placeholder-gray-500
+    @apply w-full px-4 py-2.5 rounded-xl 
+           border border-[var(--color-border-strong)]
+           bg-[var(--color-bg-primary)] text-[var(--color-text-primary)]
+           placeholder-[var(--color-text-muted)]
            transition-all duration-200;
+  }
+  .input:focus {
+    outline: none;
+    border-color: var(--color-accent-500);
+    box-shadow: 0 0 0 3px var(--color-accent-100);
+  }
+  .dark .input:focus {
+    box-shadow: 0 0 0 3px rgba(var(--color-accent-500), 0.2);
   }
 
   .badge {
@@ -132,7 +251,8 @@
   }
 
   .xp-bar {
-    @apply h-3 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden;
+    @apply h-3 rounded-full overflow-hidden;
+    background-color: var(--color-bg-tertiary);
   }
 
   .xp-bar-fill {
@@ -142,7 +262,7 @@
 
   .stat-card {
     @apply card p-4 flex flex-col items-center justify-center text-center
-           hover:shadow-soft-lg transition-shadow duration-200;
+           hover:shadow-lg transition-shadow duration-200;
   }
 
   .achievement-card {
@@ -209,7 +329,41 @@
   }
 
   .gradient-text {
-    @apply bg-clip-text text-transparent bg-gradient-to-r from-teal-500 to-cyan-500;
+    @apply bg-clip-text text-transparent;
+    background-image: linear-gradient(to right, var(--color-accent-gradient-from), var(--color-accent-gradient-to));
+  }
+
+  /* Accent utilities */
+  .bg-accent {
+    background-color: var(--color-accent-500);
+  }
+
+  .bg-accent-gradient {
+    background: linear-gradient(to right, var(--color-accent-gradient-from), var(--color-accent-gradient-to));
+  }
+
+  .bg-accent-gradient-br {
+    background: linear-gradient(to bottom right, var(--color-accent-gradient-from), var(--color-accent-gradient-to));
+  }
+
+  .text-accent {
+    color: var(--color-accent-500);
+  }
+
+  .text-accent-dark {
+    color: var(--color-accent-600);
+  }
+
+  .border-accent {
+    border-color: var(--color-accent-500);
+  }
+
+  .ring-accent {
+    --tw-ring-color: var(--color-accent-500);
+  }
+
+  .shadow-accent {
+    box-shadow: 0 4px 14px -4px var(--color-accent-500);
   }
 
   .scrollbar-hide {
@@ -238,8 +392,8 @@
     box-shadow: 0 4px 16px -4px rgba(0, 0, 0, 0.15), 0 8px 32px -8px rgba(0, 0, 0, 0.15);
   }
 
-  .shadow-glow-teal {
-    box-shadow: 0 4px 20px -4px rgba(20, 184, 166, 0.4);
+  .shadow-glow-accent {
+    box-shadow: 0 4px 20px -4px var(--color-accent-400);
   }
 
   /* Glass morphism */

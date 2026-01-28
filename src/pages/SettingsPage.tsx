@@ -41,12 +41,16 @@ const ACCENT_COLORS = [
 export const SettingsPage: React.FC = () => {
   const { user, signOut, deleteAccount, updateSettings } = useAuthStore();
   const { exportData, importData, clearAllData } = useTaskStore();
-  const { theme, setTheme, soundEnabled, toggleSound, notificationsEnabled, toggleNotifications } = useUIStore();
+  const { 
+    theme, setTheme, 
+    accentColor, setAccentColor,
+    soundEnabled, toggleSound, 
+    notificationsEnabled, toggleNotifications 
+  } = useUIStore();
   
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [showClearDataModal, setShowClearDataModal] = useState(false);
   const [showSecurityModal, setShowSecurityModal] = useState(false);
-  const [selectedAccentColor, setSelectedAccentColor] = useState('teal');
   const [deleteConfirmText, setDeleteConfirmText] = useState('');
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -154,7 +158,10 @@ export const SettingsPage: React.FC = () => {
     <div className="max-w-2xl mx-auto space-y-6 pb-8">
       {/* Header */}
       <div className="flex items-center gap-3 mb-8">
-        <div className="p-3 rounded-2xl bg-gradient-to-br from-teal-500 to-cyan-500 text-white shadow-lg">
+        <div 
+          className="p-3 rounded-2xl text-white shadow-lg"
+          style={{ background: 'linear-gradient(to bottom right, var(--color-accent-gradient-from), var(--color-accent-gradient-to))' }}
+        >
           <Settings className="w-6 h-6" />
         </div>
         <div>
@@ -167,7 +174,7 @@ export const SettingsPage: React.FC = () => {
       <Card className="overflow-hidden">
         <div className="p-4 border-b border-gray-100 dark:border-gray-700/50">
           <h2 className="font-semibold text-gray-900 dark:text-white flex items-center gap-2">
-            <Palette className="w-5 h-5 text-teal-500" />
+            <Palette className="w-5 h-5" style={{ color: 'var(--color-accent-500)' }} />
             Apparence
           </h2>
         </div>
@@ -191,7 +198,8 @@ export const SettingsPage: React.FC = () => {
             <select
               value={theme}
               onChange={(e) => handleThemeChange(e.target.value as 'light' | 'dark' | 'system')}
-              className="px-4 py-2 rounded-xl border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-all cursor-pointer"
+              className="px-4 py-2 rounded-xl border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:border-transparent transition-all cursor-pointer"
+              style={{ '--tw-ring-color': 'var(--color-accent-500)' } as React.CSSProperties}
             >
               <option value="light">Clair</option>
               <option value="dark">Sombre</option>
@@ -213,11 +221,11 @@ export const SettingsPage: React.FC = () => {
                 <button
                   key={color.value}
                   onClick={() => {
-                    setSelectedAccentColor(color.value);
+                    setAccentColor(color.value as 'teal' | 'blue' | 'purple' | 'green' | 'orange');
                     toast.success(`Couleur ${color.name} sélectionnée`);
                   }}
                   className={`w-8 h-8 rounded-full ${color.class} transition-all hover:scale-110 ${
-                    selectedAccentColor === color.value 
+                    accentColor === color.value 
                       ? 'ring-2 ring-offset-2 ring-gray-400 dark:ring-offset-gray-800' 
                       : ''
                   }`}
@@ -233,7 +241,7 @@ export const SettingsPage: React.FC = () => {
       <Card className="overflow-hidden">
         <div className="p-4 border-b border-gray-100 dark:border-gray-700/50">
           <h2 className="font-semibold text-gray-900 dark:text-white flex items-center gap-2">
-            <Bell className="w-5 h-5 text-teal-500" />
+            <Bell className="w-5 h-5" style={{ color: 'var(--color-accent-500)' }} />
             Notifications & Sons
           </h2>
         </div>
@@ -243,7 +251,7 @@ export const SettingsPage: React.FC = () => {
           <div className="p-4 flex items-center justify-between">
             <div className="flex items-center gap-3">
               {notificationsEnabled ? (
-                <Bell className="w-5 h-5 text-teal-500" />
+                <Bell className="w-5 h-5" style={{ color: 'var(--color-accent-500)' }} />
               ) : (
                 <BellOff className="w-5 h-5 text-gray-400" />
               )}
@@ -254,10 +262,10 @@ export const SettingsPage: React.FC = () => {
             </div>
             <button
               onClick={handleNotificationsToggle}
-              className={`relative w-14 h-8 rounded-full transition-colors duration-200 ${
-                notificationsEnabled ? 'bg-teal-500' : 'bg-gray-300 dark:bg-gray-600'
-              }`}
+              className="relative w-14 h-8 rounded-full transition-colors duration-200"
+              style={{ backgroundColor: notificationsEnabled ? 'var(--color-accent-500)' : undefined }}
             >
+              {!notificationsEnabled && <span className="absolute inset-0 rounded-full bg-gray-300 dark:bg-gray-600" />}
               <span
                 className={`absolute top-1 left-1 w-6 h-6 bg-white rounded-full shadow-md transition-transform duration-200 ${
                   notificationsEnabled ? 'translate-x-6' : 'translate-x-0'
@@ -270,7 +278,7 @@ export const SettingsPage: React.FC = () => {
           <div className="p-4 flex items-center justify-between">
             <div className="flex items-center gap-3">
               {soundEnabled ? (
-                <Volume2 className="w-5 h-5 text-teal-500" />
+                <Volume2 className="w-5 h-5" style={{ color: 'var(--color-accent-500)' }} />
               ) : (
                 <VolumeX className="w-5 h-5 text-gray-400" />
               )}
@@ -281,10 +289,10 @@ export const SettingsPage: React.FC = () => {
             </div>
             <button
               onClick={handleSoundToggle}
-              className={`relative w-14 h-8 rounded-full transition-colors duration-200 ${
-                soundEnabled ? 'bg-teal-500' : 'bg-gray-300 dark:bg-gray-600'
-              }`}
+              className="relative w-14 h-8 rounded-full transition-colors duration-200"
+              style={{ backgroundColor: soundEnabled ? 'var(--color-accent-500)' : undefined }}
             >
+              {!soundEnabled && <span className="absolute inset-0 rounded-full bg-gray-300 dark:bg-gray-600" />}
               <span
                 className={`absolute top-1 left-1 w-6 h-6 bg-white rounded-full shadow-md transition-transform duration-200 ${
                   soundEnabled ? 'translate-x-6' : 'translate-x-0'
@@ -299,7 +307,7 @@ export const SettingsPage: React.FC = () => {
       <Card className="overflow-hidden">
         <div className="p-4 border-b border-gray-100 dark:border-gray-700/50">
           <h2 className="font-semibold text-gray-900 dark:text-white flex items-center gap-2">
-            <Download className="w-5 h-5 text-teal-500" />
+            <Download className="w-5 h-5" style={{ color: 'var(--color-accent-500)' }} />
             Données
           </h2>
         </div>
@@ -329,7 +337,7 @@ export const SettingsPage: React.FC = () => {
                 <p className="text-sm text-gray-500 dark:text-gray-400">Restaurer depuis une sauvegarde</p>
               </div>
             </div>
-            <span className="text-sm text-teal-500 font-medium">Choisir un fichier</span>
+            <span className="text-sm text-accent font-medium">Choisir un fichier</span>
             <input
               ref={fileInputRef}
               type="file"
@@ -417,14 +425,14 @@ export const SettingsPage: React.FC = () => {
       <Card className="overflow-hidden">
         <div className="p-4 border-b border-gray-100 dark:border-gray-700/50">
           <h2 className="font-semibold text-gray-900 dark:text-white flex items-center gap-2">
-            <Info className="w-5 h-5 text-teal-500" />
+            <Info className="w-5 h-5 text-accent" />
             À propos
           </h2>
         </div>
         
         <div className="p-4 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-teal-500 to-cyan-500 flex items-center justify-center">
+            <div className="w-10 h-10 rounded-xl bg-accent-gradient-br flex items-center justify-center">
               <Sparkles className="w-5 h-5 text-white" />
             </div>
             <div>
@@ -545,7 +553,7 @@ export const SettingsPage: React.FC = () => {
           
           <div className="p-4 bg-gray-50 dark:bg-gray-700/50 rounded-xl">
             <div className="flex items-center gap-3 mb-2">
-              <Shield className="w-5 h-5 text-teal-500" />
+              <Shield className="w-5 h-5 text-accent" />
               <p className="font-medium text-gray-900 dark:text-white">Données chiffrées</p>
             </div>
             <p className="text-sm text-gray-500 dark:text-gray-400 ml-8">

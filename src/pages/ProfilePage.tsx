@@ -66,7 +66,7 @@ export const ProfilePage: React.FC = () => {
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-teal-500 via-cyan-500 to-blue-500 p-6 text-white"
+        className="relative overflow-hidden rounded-2xl bg-accent-gradient-br p-6 text-white"
       >
         <div className="absolute inset-0 bg-black/10" />
         

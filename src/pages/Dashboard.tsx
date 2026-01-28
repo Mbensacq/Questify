@@ -86,7 +86,7 @@ export const Dashboard: React.FC = () => {
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-teal-500 via-cyan-500 to-blue-500 p-4 sm:p-6 text-white shadow-lg"
+        className="relative overflow-hidden rounded-2xl bg-accent-gradient-br p-4 sm:p-6 text-white shadow-lg"
       >
         <div className="relative z-10">
           <div className="flex items-start justify-between gap-3">

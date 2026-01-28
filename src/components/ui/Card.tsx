@@ -54,7 +54,7 @@ interface StatCardProps {
 }
 
 const colorClasses = {
-  primary: 'bg-gradient-to-br from-teal-500/20 to-cyan-500/20 text-teal-600 dark:text-teal-400',
+  primary: 'bg-[var(--color-accent-100)] dark:bg-[var(--color-accent-900)]/40 text-accent',
   yellow: 'bg-gradient-to-br from-yellow-500/20 to-amber-500/20 text-yellow-600 dark:text-yellow-400',
   orange: 'bg-gradient-to-br from-orange-500/20 to-red-500/20 text-orange-600 dark:text-orange-400',
   purple: 'bg-gradient-to-br from-purple-500/20 to-pink-500/20 text-purple-600 dark:text-purple-400',
