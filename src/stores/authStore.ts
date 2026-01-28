@@ -1,0 +1,577 @@
+import { create } from 'zustand';
+import { persist } from 'zustand/middleware';
+import { v4 as uuidv4 } from 'uuid';
+import { 
+  User, 
+  UserSettings, 
+  AvatarConfig,
+  GameStats,
+  XP_PER_LEVEL_BASE,
+  XP_LEVEL_MULTIPLIER,
+  STREAK_BONUSES
+} from '../types';
+import { 
+  signInWithPopup, 
+  signInWithEmailAndPassword,
+  createUserWithEmailAndPassword,
+  signOut as firebaseSignOut,
+  onAuthStateChanged,
+  User as FirebaseUser
+} from 'firebase/auth';
+import { doc, getDoc, setDoc, updateDoc } from 'firebase/firestore';
+import { auth, db, googleProvider, githubProvider } from '../config/firebase';
+
+interface AuthState {
+  user: User | null;
+  firebaseUser: FirebaseUser | null;
+  gameStats: GameStats | null;
+  isLoading: boolean;
+  isInitialized: boolean;
+  isDemo: boolean;
+  error: string | null;
+
+  // Auth actions
+  initializeAuth: () => Promise<void>;
+  initialize: () => Promise<void>;
+  signInWithEmail: (email: string, password: string) => Promise<void>;
+  signUpWithEmail: (email: string, password: string, username: string) => Promise<void>;
+  signInWithGoogle: () => Promise<void>;
+  signInWithGithub: () => Promise<void>;
+  signInDemo: () => Promise<void>;
+  signOut: () => Promise<void>;
+  deleteAccount: () => Promise<void>;
+  
+  // Profile actions
+  updateProfile: (updates: Partial<User>) => Promise<void>;
+  updateSettings: (settings: Partial<UserSettings>) => Promise<void>;
+  updateAvatar: (avatar: AvatarConfig) => Promise<void>;
+  
+  // Game stats actions
+  addXP: (amount: number) => Promise<{ leveledUp: boolean; newLevel: number }>;
+  updateStreak: () => Promise<void>;
+  incrementStat: (stat: keyof GameStats, amount?: number) => Promise<void>;
+  addCoins: (amount: number) => Promise<void>;
+  addGems: (amount: number) => Promise<void>;
+  spendCoins: (amount: number) => Promise<boolean>;
+  spendGems: (amount: number) => Promise<boolean>;
+  unlockAchievement: (achievementId: string) => Promise<void>;
+  
+  // Helpers
+  calculateXPForLevel: (level: number) => number;
+  calculateLevel: (totalXP: number) => { level: number; currentXP: number; xpToNextLevel: number };
+  getStreakBonus: () => number;
+}
+
+const defaultSettings: UserSettings = {
+  theme: 'dark',
+  language: 'fr',
+  notifications: {
+    enabled: true,
+    dailyReminder: true,
+    dailyReminderTime: '09:00',
+    achievementUnlock: true,
+    streakWarning: true,
+    weeklyReport: true,
+  },
+  sound: {
+    enabled: true,
+    volume: 0.7,
+    taskComplete: true,
+    levelUp: true,
+    achievementUnlock: true,
+  },
+  privacy: {
+    publicProfile: false,
+    showStats: true,
+    showAchievements: true,
+  },
+};
+
+const defaultAvatar: AvatarConfig = {
+  type: 'default',
+  baseColor: '#6366f1',
+  icon: '🦸',
+};
+
+const createDefaultGameStats = (userId: string): GameStats => ({
+  userId: userId,
+  level: 1,
+  currentXP: 0,
+  totalXP: 0,
+  xpToNextLevel: XP_PER_LEVEL_BASE,
+  currentStreak: 0,
+  longestStreak: 0,
+  lastCompletedDate: null,
+  tasksCompleted: 0,
+  tasksCreated: 0,
+  tasksFailed: 0,
+  totalFocusTime: 0,
+  averageTaskTime: 0,
+  categoryStats: {},
+  achievementPoints: 0,
+  achievementsUnlocked: [],
+  coins: 100,
+  gems: 10,
+  dailyXP: 0,
+  weeklyXP: 0,
+  dailyTasksCompleted: 0,
+  weeklyTasksCompleted: 0,
+  lastDailyReset: new Date().toISOString(),
+  lastWeeklyReset: new Date().toISOString(),
+});
+
+export const useAuthStore = create<AuthState>()(
+  persist(
+    (set, get) => ({
+      user: null,
+      firebaseUser: null,
+      gameStats: null,
+      isLoading: true,
+      isInitialized: false,
+      isDemo: false,
+      error: null,
+
+      initializeAuth: async () => {
+        return get().initialize();
+      },
+
+      initialize: async () => {
+        // Check if we have a demo user stored
+        const state = get();
+        if (state.isDemo && state.user) {
+          set({ isLoading: false, isInitialized: true });
+          return Promise.resolve();
+        }
+
+        return new Promise<void>((resolve) => {
+          try {
+            const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
+              if (firebaseUser) {
+                try {
+                  // Récupérer les données utilisateur depuis Firestore
+                  const userDoc = await getDoc(doc(db, 'users', firebaseUser.uid));
+                  const statsDoc = await getDoc(doc(db, 'gameStats', firebaseUser.uid));
+
+                  if (userDoc.exists()) {
+                    set({ 
+                      user: userDoc.data() as User,
+                      gameStats: statsDoc.exists() ? statsDoc.data() as GameStats : createDefaultGameStats(firebaseUser.uid),
+                      firebaseUser,
+                      isLoading: false,
+                      isInitialized: true,
+                    });
+                  } else {
+                    // Créer un nouveau profil
+                    const newUser: User = {
+                      id: firebaseUser.uid,
+                      email: firebaseUser.email || '',
+                      username: firebaseUser.displayName || `User_${firebaseUser.uid.slice(0, 6)}`,
+                      avatar: defaultAvatar,
+                      createdAt: new Date(),
+                      lastLoginAt: new Date(),
+                      settings: defaultSettings,
+                    };
+                    const newStats = createDefaultGameStats(firebaseUser.uid);
+                    
+                    await setDoc(doc(db, 'users', firebaseUser.uid), newUser);
+                    await setDoc(doc(db, 'gameStats', firebaseUser.uid), newStats);
+                    
+                    set({ 
+                      user: newUser, 
+                      gameStats: newStats,
+                      firebaseUser,
+                      isLoading: false,
+                      isInitialized: true,
+                    });
+                  }
+                } catch (error) {
+                  console.error('Error loading user data:', error);
+                  set({ isLoading: false, isInitialized: true, error: 'Failed to load user data' });
+                }
+              } else {
+                set({ 
+                  user: null, 
+                  gameStats: null,
+                  firebaseUser: null,
+                  isLoading: false,
+                  isInitialized: true,
+                });
+              }
+              resolve();
+            });
+            // Store unsubscribe if needed
+            void unsubscribe;
+          } catch (error) {
+            // Firebase not configured - allow demo mode
+            console.warn('Firebase auth not configured, demo mode available');
+            set({ isLoading: false, isInitialized: true });
+            resolve();
+          }
+        });
+      },
+
+      signInWithEmail: async (email, password) => {
+        set({ isLoading: true, error: null });
+        try {
+          await signInWithEmailAndPassword(auth, email, password);
+        } catch (error: unknown) {
+          const errorMessage = error instanceof Error ? error.message : 'Sign in failed';
+          set({ error: errorMessage, isLoading: false });
+          throw error;
+        }
+      },
+
+      signUpWithEmail: async (email, password, username) => {
+        set({ isLoading: true, error: null });
+        try {
+          const result = await createUserWithEmailAndPassword(auth, email, password);
+          
+          const newUser: User = {
+            id: result.user.uid,
+            email,
+            username,
+            avatar: defaultAvatar,
+            createdAt: new Date(),
+            lastLoginAt: new Date(),
+            settings: defaultSettings,
+          };
+          const newStats = createDefaultGameStats(result.user.uid);
+          
+          await setDoc(doc(db, 'users', result.user.uid), newUser);
+          await setDoc(doc(db, 'gameStats', result.user.uid), newStats);
+          
+          set({ user: newUser, gameStats: newStats, firebaseUser: result.user });
+        } catch (error: unknown) {
+          const errorMessage = error instanceof Error ? error.message : 'Sign up failed';
+          set({ error: errorMessage, isLoading: false });
+          throw error;
+        }
+      },
+
+      signInWithGoogle: async () => {
+        set({ isLoading: true, error: null });
+        try {
+          await signInWithPopup(auth, googleProvider);
+        } catch (error: unknown) {
+          const errorMessage = error instanceof Error ? error.message : 'Google sign in failed';
+          set({ error: errorMessage, isLoading: false });
+          throw error;
+        }
+      },
+
+      signInWithGithub: async () => {
+        set({ isLoading: true, error: null });
+        try {
+          await signInWithPopup(auth, githubProvider);
+        } catch (error: unknown) {
+          const errorMessage = error instanceof Error ? error.message : 'GitHub sign in failed';
+          set({ error: errorMessage, isLoading: false });
+          throw error;
+        }
+      },
+
+      signInDemo: async () => {
+        set({ isLoading: true, error: null });
+        
+        const demoUserId = `demo_${uuidv4()}`;
+        const demoUser: User = {
+          id: demoUserId,
+          email: 'demo@questify.app',
+          username: 'DemoHero',
+          avatar: defaultAvatar,
+          createdAt: new Date(),
+          lastLoginAt: new Date(),
+          settings: defaultSettings,
+        };
+        const demoStats = createDefaultGameStats(demoUserId);
+        // Give demo user some starting resources
+        demoStats.coins = 500;
+        demoStats.gems = 50;
+        
+        set({
+          user: demoUser,
+          gameStats: demoStats,
+          firebaseUser: null,
+          isLoading: false,
+          isInitialized: true,
+          isDemo: true,
+        });
+      },
+
+      signOut: async () => {
+        const { isDemo } = get();
+        try {
+          if (!isDemo) {
+            await firebaseSignOut(auth);
+          }
+          set({ user: null, gameStats: null, firebaseUser: null, isDemo: false });
+        } catch (error: unknown) {
+          const errorMessage = error instanceof Error ? error.message : 'Sign out failed';
+          set({ error: errorMessage });
+          throw error;
+        }
+      },
+
+      deleteAccount: async () => {
+        const { firebaseUser, user, isDemo } = get();
+        if (!user) return;
+
+        if (isDemo) {
+          set({ user: null, gameStats: null, firebaseUser: null, isDemo: false });
+          return;
+        }
+
+        if (!firebaseUser) return;
+
+        try {
+          // Delete user data from Firestore
+          await Promise.all([
+            updateDoc(doc(db, 'users', user.id), { deleted: true }),
+            updateDoc(doc(db, 'gameStats', user.id), { deleted: true }),
+          ]);
+          
+          // Delete Firebase auth user
+          await firebaseUser.delete();
+          set({ user: null, gameStats: null, firebaseUser: null });
+        } catch (error: unknown) {
+          const errorMessage = error instanceof Error ? error.message : 'Delete account failed';
+          set({ error: errorMessage });
+          throw error;
+        }
+      },
+
+      updateProfile: async (updates) => {
+        const { user, isDemo } = get();
+        if (!user) return;
+
+        const updatedUser = { ...user, ...updates };
+        if (!isDemo) {
+          await updateDoc(doc(db, 'users', user.id), updates);
+        }
+        set({ user: updatedUser });
+      },
+
+      updateSettings: async (settings) => {
+        const { user, isDemo } = get();
+        if (!user) return;
+
+        const updatedSettings = { ...user.settings, ...settings };
+        if (!isDemo) {
+          await updateDoc(doc(db, 'users', user.id), { settings: updatedSettings });
+        }
+        set({ user: { ...user, settings: updatedSettings } });
+      },
+
+      updateAvatar: async (avatar) => {
+        const { user, isDemo } = get();
+        if (!user) return;
+
+        if (!isDemo) {
+          await updateDoc(doc(db, 'users', user.id), { avatar });
+        }
+        set({ user: { ...user, avatar } });
+      },
+
+      calculateXPForLevel: (level) => {
+        return Math.floor(XP_PER_LEVEL_BASE * Math.pow(XP_LEVEL_MULTIPLIER, level - 1));
+      },
+
+      calculateLevel: (totalXP) => {
+        let level = 1;
+        let xpForCurrentLevel = XP_PER_LEVEL_BASE;
+        let xpAccumulated = 0;
+
+        while (xpAccumulated + xpForCurrentLevel <= totalXP) {
+          xpAccumulated += xpForCurrentLevel;
+          level++;
+          xpForCurrentLevel = get().calculateXPForLevel(level);
+        }
+
+        return {
+          level,
+          currentXP: totalXP - xpAccumulated,
+          xpToNextLevel: xpForCurrentLevel,
+        };
+      },
+
+      getStreakBonus: () => {
+        const { gameStats } = get();
+        if (!gameStats) return 0;
+
+        const streak = gameStats.currentStreak;
+        let bonus = 0;
+        
+        for (const { days, bonus: b } of STREAK_BONUSES) {
+          if (streak >= days) {
+            bonus = b;
+          }
+        }
+        
+        return bonus;
+      },
+
+      addXP: async (amount) => {
+        const { gameStats, user, isDemo, getStreakBonus, calculateLevel } = get();
+        if (!gameStats || !user) return { leveledUp: false, newLevel: 0 };
+
+        const streakBonus = getStreakBonus();
+        const bonusXP = Math.floor(amount * streakBonus);
+        const totalXPGained = amount + bonusXP;
+        
+        const newTotalXP = gameStats.totalXP + totalXPGained;
+        const { level: newLevel, currentXP, xpToNextLevel } = calculateLevel(newTotalXP);
+        const leveledUp = newLevel > gameStats.level;
+
+        const updates: Partial<GameStats> = {
+          totalXP: newTotalXP,
+          level: newLevel,
+          currentXP,
+          xpToNextLevel,
+          dailyXP: gameStats.dailyXP + totalXPGained,
+          weeklyXP: gameStats.weeklyXP + totalXPGained,
+        };
+
+        if (!isDemo) {
+          await updateDoc(doc(db, 'gameStats', user.id), updates);
+        }
+        set({ gameStats: { ...gameStats, ...updates } });
+
+        // Mettre à jour les quêtes liées à l'XP
+        const { useQuestStore } = await import('./questStore');
+        await useQuestStore.getState().checkAndUpdateQuests('xp_gained', {
+          amount: totalXPGained,
+        });
+
+        return { leveledUp, newLevel };
+      },
+
+      updateStreak: async () => {
+        const { gameStats, user, isDemo } = get();
+        if (!gameStats || !user) return;
+
+        const today = new Date().toISOString().split('T')[0];
+        const lastCompleted = gameStats.lastCompletedDate;
+
+        let newStreak = gameStats.currentStreak;
+        
+        if (!lastCompleted) {
+          newStreak = 1;
+        } else {
+          const lastDate = new Date(lastCompleted);
+          const todayDate = new Date(today);
+          const diffDays = Math.floor((todayDate.getTime() - lastDate.getTime()) / (1000 * 60 * 60 * 24));
+
+          if (diffDays === 0) {
+            // Même jour, pas de changement
+          } else if (diffDays === 1) {
+            newStreak += 1;
+          } else {
+            newStreak = 1; // Streak cassé
+          }
+        }
+
+        const updates: Partial<GameStats> = {
+          currentStreak: newStreak,
+          longestStreak: Math.max(newStreak, gameStats.longestStreak),
+          lastCompletedDate: today,
+        };
+
+        if (!isDemo) {
+          await updateDoc(doc(db, 'gameStats', user.id), updates);
+        }
+        set({ gameStats: { ...gameStats, ...updates } });
+
+        // Mettre à jour les quêtes liées au streak
+        const { useQuestStore } = await import('./questStore');
+        await useQuestStore.getState().checkAndUpdateQuests('streak_updated', {
+          streak: newStreak,
+        });
+      },
+
+      incrementStat: async (stat, amount = 1) => {
+        const { gameStats, user, isDemo } = get();
+        if (!gameStats || !user) return;
+
+        const currentValue = gameStats[stat];
+        if (typeof currentValue !== 'number') return;
+
+        const updates = { [stat]: currentValue + amount };
+        if (!isDemo) {
+          await updateDoc(doc(db, 'gameStats', user.id), updates);
+        }
+        set({ gameStats: { ...gameStats, ...updates } });
+      },
+
+      addCoins: async (amount) => {
+        const { gameStats, user, isDemo } = get();
+        if (!gameStats || !user) return;
+
+        const updates = { coins: gameStats.coins + amount };
+        if (!isDemo) {
+          await updateDoc(doc(db, 'gameStats', user.id), updates);
+        }
+        set({ gameStats: { ...gameStats, ...updates } });
+      },
+
+      addGems: async (amount) => {
+        const { gameStats, user, isDemo } = get();
+        if (!gameStats || !user) return;
+
+        const updates = { gems: gameStats.gems + amount };
+        if (!isDemo) {
+          await updateDoc(doc(db, 'gameStats', user.id), updates);
+        }
+        set({ gameStats: { ...gameStats, ...updates } });
+      },
+
+      spendCoins: async (amount) => {
+        const { gameStats, user, isDemo } = get();
+        if (!gameStats || !user) return false;
+        if (gameStats.coins < amount) return false;
+
+        const updates = { coins: gameStats.coins - amount };
+        if (!isDemo) {
+          await updateDoc(doc(db, 'gameStats', user.id), updates);
+        }
+        set({ gameStats: { ...gameStats, ...updates } });
+        return true;
+      },
+
+      spendGems: async (amount) => {
+        const { gameStats, user, isDemo } = get();
+        if (!gameStats || !user) return false;
+        if (gameStats.gems < amount) return false;
+
+        const updates = { gems: gameStats.gems - amount };
+        if (!isDemo) {
+          await updateDoc(doc(db, 'gameStats', user.id), updates);
+        }
+        set({ gameStats: { ...gameStats, ...updates } });
+        return true;
+      },
+
+      unlockAchievement: async (achievementId) => {
+        const { gameStats, user, isDemo } = get();
+        if (!gameStats || !user) return;
+        if (gameStats.achievementsUnlocked.includes(achievementId)) return;
+
+        const updates = {
+          achievementsUnlocked: [...gameStats.achievementsUnlocked, achievementId],
+        };
+        if (!isDemo) {
+          await updateDoc(doc(db, 'gameStats', user.id), updates);
+        }
+        set({ gameStats: { ...gameStats, ...updates } });
+      },
+    }),
+    {
+      name: 'questify-auth',
+      partialize: (state) => ({ 
+        // Persist user and game stats for demo mode
+        user: state.user,
+        gameStats: state.gameStats,
+        isDemo: state.isDemo,
+      }),
+    }
+  )
+);

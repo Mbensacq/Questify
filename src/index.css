@@ -1,0 +1,329 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --color-bg-primary: #fafcfc;
+    --color-bg-secondary: #f0f9f9;
+    --color-bg-tertiary: #e6f5f5;
+    --color-text-primary: #1e3a3a;
+    --color-text-secondary: #3d5a5a;
+    --color-text-muted: #6b8a8a;
+  }
+
+  .dark {
+    --color-bg-primary: #0f1a1a;
+    --color-bg-secondary: #142424;
+    --color-bg-tertiary: #1a2f2f;
+    --color-text-primary: #e8f5f5;
+    --color-text-secondary: #c5dada;
+    --color-text-muted: #8aabab;
+  }
+
+  html, body, #root {
+    @apply h-full w-full overflow-x-hidden;
+  }
+
+  body {
+    @apply bg-[var(--color-bg-primary)] text-[var(--color-text-primary)] transition-colors duration-300;
+    font-family: 'Quicksand', 'Inter', system-ui, -apple-system, sans-serif;
+    -webkit-tap-highlight-color: transparent;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  /* Safe area for iOS/Android notches */
+  .safe-area-bottom {
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+
+  .pb-safe {
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+
+  /* Better touch targets for mobile */
+  .touch-manipulation {
+    touch-action: manipulation;
+  }
+
+  /* Prevent text selection on interactive elements */
+  button, a, .no-select {
+    -webkit-user-select: none;
+    user-select: none;
+  }
+
+  * {
+    @apply border-gray-200 dark:border-gray-700;
+  }
+}
+
+@layer components {
+  .btn {
+    @apply px-4 py-2 rounded-lg font-medium transition-all duration-200 
+           disabled:opacity-50 disabled:cursor-not-allowed
+           focus:outline-none focus:ring-2 focus:ring-offset-2;
+  }
+
+  .btn-primary {
+    @apply btn bg-primary-500 text-white hover:bg-primary-600 
+           focus:ring-primary-500 active:bg-primary-700;
+  }
+
+  .btn-secondary {
+    @apply btn bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 
+           hover:bg-gray-300 dark:hover:bg-gray-600 focus:ring-gray-500;
+  }
+
+  .btn-danger {
+    @apply btn bg-red-500 text-white hover:bg-red-600 
+           focus:ring-red-500 active:bg-red-700;
+  }
+
+  .btn-success {
+    @apply btn bg-green-500 text-white hover:bg-green-600 
+           focus:ring-green-500 active:bg-green-700;
+  }
+
+  .btn-game {
+    @apply btn bg-gradient-to-r from-primary-500 to-purple-500 text-white 
+           hover:from-primary-600 hover:to-purple-600 
+           shadow-lg hover:shadow-xl transform hover:-translate-y-0.5;
+  }
+
+  .card {
+    @apply bg-white dark:bg-gray-800 rounded-xl shadow-lg 
+           border border-gray-100 dark:border-gray-700;
+  }
+
+  .card-game {
+    @apply card bg-gradient-to-br from-white to-gray-50 
+           dark:from-gray-800 dark:to-gray-900
+           hover:shadow-xl transition-shadow duration-300;
+  }
+
+  .input {
+    @apply w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600
+           bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100
+           focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent
+           placeholder-gray-400 dark:placeholder-gray-500
+           transition-colors duration-200;
+  }
+
+  .badge {
+    @apply inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium;
+  }
+
+  .badge-common {
+    @apply badge bg-gray-200 text-gray-800 dark:bg-gray-700 dark:text-gray-200;
+  }
+
+  .badge-rare {
+    @apply badge bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200;
+  }
+
+  .badge-epic {
+    @apply badge bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200;
+  }
+
+  .badge-legendary {
+    @apply badge bg-gradient-to-r from-yellow-400 to-orange-500 text-white;
+  }
+
+  .xp-bar {
+    @apply h-3 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden;
+  }
+
+  .xp-bar-fill {
+    @apply h-full bg-gradient-to-r from-green-400 to-emerald-500 
+           transition-all duration-500 ease-out;
+  }
+
+  .stat-card {
+    @apply card p-4 flex flex-col items-center justify-center text-center
+           hover:shadow-soft-lg transition-shadow duration-200;
+  }
+
+  .achievement-card {
+    @apply card-game p-4 relative overflow-hidden;
+  }
+
+  .achievement-card.locked {
+    @apply opacity-60 grayscale;
+  }
+
+  .achievement-card.unlocked {
+    @apply ring-2 ring-yellow-400;
+  }
+
+  .quest-card {
+    @apply card p-4 border-l-4 hover:shadow-lg transition-shadow;
+  }
+
+  .quest-card.daily {
+    @apply border-l-blue-500;
+  }
+
+  .quest-card.weekly {
+    @apply border-l-cyan-500;
+  }
+
+  .quest-card.special {
+    @apply border-l-yellow-500;
+  }
+
+  .priority-low {
+    @apply text-green-500;
+  }
+
+  .priority-medium {
+    @apply text-yellow-500;
+  }
+
+  .priority-high {
+    @apply text-orange-500;
+  }
+
+  .priority-critical {
+    @apply text-red-500;
+  }
+
+  .glass {
+    @apply bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm;
+  }
+
+  .tooltip {
+    @apply absolute z-50 px-2 py-1 text-sm text-white bg-gray-900 rounded 
+           shadow-lg whitespace-nowrap;
+  }
+}
+
+@layer utilities {
+  .text-glow {
+    text-shadow: 0 0 10px currentColor;
+  }
+
+  .box-glow {
+    box-shadow: 0 0 20px currentColor;
+  }
+
+  .gradient-text {
+    @apply bg-clip-text text-transparent bg-gradient-to-r from-primary-500 to-purple-500;
+  }
+
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
+
+  .safe-bottom {
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+
+  .safe-top {
+    padding-top: env(safe-area-inset-top);
+  }
+}
+
+/* Custom animations */
+@keyframes shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+.shimmer {
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.2),
+    transparent
+  );
+  background-size: 200% 100%;
+  animation: shimmer 2s infinite;
+}
+
+/* Level up animation overlay */
+.level-up-overlay {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.8);
+  z-index: 100;
+}
+
+/* Achievement unlock animation */
+@keyframes achievement-unlock {
+  0% {
+    transform: scale(0) rotate(-180deg);
+    opacity: 0;
+  }
+  50% {
+    transform: scale(1.2) rotate(10deg);
+  }
+  100% {
+    transform: scale(1) rotate(0);
+    opacity: 1;
+  }
+}
+
+.achievement-unlock {
+  animation: achievement-unlock 0.6s ease-out forwards;
+}
+
+/* XP gain floating text */
+@keyframes float-up {
+  0% {
+    transform: translateY(0);
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(-50px);
+    opacity: 0;
+  }
+}
+
+.float-up {
+  animation: float-up 1s ease-out forwards;
+}
+
+/* Streak fire animation */
+@keyframes fire {
+  0%, 100% {
+    transform: scaleY(1);
+  }
+  50% {
+    transform: scaleY(1.1);
+  }
+}
+
+.fire-animation {
+  animation: fire 0.5s ease-in-out infinite;
+}
+
+/* Mobile responsiveness */
+@media (max-width: 640px) {
+  .card {
+    @apply rounded-lg;
+  }
+  
+  .btn {
+    @apply px-3 py-2 text-sm;
+  }
+}
+
+/* Print styles */
+@media print {
+  .no-print {
+    display: none !important;
+  }
+}
