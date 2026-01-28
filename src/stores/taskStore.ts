@@ -216,15 +216,22 @@ export const useTaskStore = create<TaskState>()(
 
       updateTask: async (id, updates) => {
         const isDemo = useAuthStore.getState().isDemo;
-        const updatedData = { ...updates, updatedAt: new Date() };
+        
+        // Remove undefined values for Firebase compatibility
+        const cleanUpdates: Record<string, any> = { updatedAt: new Date() };
+        Object.entries(updates).forEach(([key, value]) => {
+          if (value !== undefined) {
+            cleanUpdates[key] = value;
+          }
+        });
         
         if (!isDemo) {
-          await updateDoc(doc(db, 'tasks', id), updatedData);
+          await updateDoc(doc(db, 'tasks', id), cleanUpdates);
         }
         
         set(state => ({
           tasks: state.tasks.map(task => 
-            task.id === id ? { ...task, ...updatedData } : task
+            task.id === id ? { ...task, ...cleanUpdates } : task
           )
         }));
       },
