@@ -11,7 +11,7 @@ import { TaskModal } from '../tasks/TaskModal';
 import { cn } from '../../utils/helpers';
 
 export const Layout: React.FC = () => {
-  const { sidebarOpen, isMobile, isTaskModalOpen, openTaskModal, closeTaskModal } = useUIStore();
+  const { sidebarOpen, isMobile, isTaskModalOpen, editingTask, openTaskModal, closeTaskModal } = useUIStore();
   const { user } = useAuthStore();
 
   return (
@@ -59,7 +59,7 @@ export const Layout: React.FC = () => {
       </motion.div>
 
       {/* Task Modal */}
-      <TaskModal isOpen={isTaskModalOpen} onClose={closeTaskModal} />
+      <TaskModal isOpen={isTaskModalOpen} onClose={closeTaskModal} editTask={editingTask} />
 
       {/* Game Animations */}
       <GameAnimations />

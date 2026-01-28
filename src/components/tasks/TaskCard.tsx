@@ -36,8 +36,14 @@ export const TaskCard: React.FC<TaskCardProps> = ({
 }) => {
   const [showMenu, setShowMenu] = useState(false);
   const [showSubtasks, setShowSubtasks] = useState(false);
-  const { completeTask, deleteTask, archiveTask, toggleSubtask, selectTask } = useTaskStore();
-  const { showXPGain, showCoinsGain, showLevelUp } = useUIStore();
+  const { completeTask, deleteTask, archiveTask, toggleSubtask } = useTaskStore();
+  const { showXPGain, showCoinsGain, showLevelUp, setEditingTask, openTaskModal } = useUIStore();
+
+  const handleEdit = () => {
+    setEditingTask(task);
+    openTaskModal();
+    setShowMenu(false);
+  };
 
   const handleComplete = async () => {
     const result = await completeTask(task.id);
@@ -133,7 +139,7 @@ export const TaskCard: React.FC<TaskCardProps> = ({
                       className="absolute right-0 top-full mt-1 w-36 sm:w-40 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 py-1 z-10"
                     >
                       <button
-                        onClick={() => { selectTask(task); setShowMenu(false); }}
+                        onClick={handleEdit}
                         className="w-full px-3 py-2.5 text-left text-sm hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center gap-2 touch-manipulation"
                       >
                         <Edit2 className="w-4 h-4" /> Modifier
