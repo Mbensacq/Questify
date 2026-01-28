@@ -171,8 +171,15 @@ export const useTaskStore = create<TaskState>()(
 
         const { xp, coins } = get().calculateTaskRewards(taskData.difficulty, taskData.priority);
         
+        // Ensure no undefined values for Firebase
         const newTask: Omit<Task, 'id'> = {
-          ...taskData,
+          title: taskData.title,
+          description: taskData.description || '',
+          difficulty: taskData.difficulty,
+          priority: taskData.priority,
+          status: taskData.status || 'pending',
+          category: taskData.category || 'personal',
+          isRecurring: taskData.isRecurring || false,
           userId,
           createdAt: new Date(),
           updatedAt: new Date(),
@@ -181,6 +188,8 @@ export const useTaskStore = create<TaskState>()(
           subtasks: taskData.subtasks || [],
           tags: taskData.tags || [],
           progress: 0,
+          ...(taskData.dueDate && { dueDate: taskData.dueDate }),
+          ...(taskData.recurringPattern && { recurringPattern: taskData.recurringPattern }),
         };
 
         let task: Task;

@@ -5,7 +5,7 @@ import path from 'path'
 
 export default defineConfig({
   // Pour GitHub Pages: utilise le nom de ton repo
-  base: process.env.GITHUB_ACTIONS ? '/OmniTaskV1/' : '/',
+  base: process.env.GITHUB_ACTIONS ? '/Questify/' : '/',
   plugins: [
     react(),
     VitePWA({
