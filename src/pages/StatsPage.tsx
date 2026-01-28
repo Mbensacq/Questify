@@ -219,7 +219,7 @@ export const StatsPage: React.FC = () => {
       {/* Charts Grid */}
       <div className="grid lg:grid-cols-2 gap-6">
         {/* Tasks Over Time */}
-        <Card>
+        <Card className="p-5">
           <div className="flex items-center justify-between mb-4">
             <h3 className="font-semibold flex items-center gap-2">
               <TrendingUp className="w-5 h-5 text-primary-500" />
@@ -232,7 +232,7 @@ export const StatsPage: React.FC = () => {
         </Card>
 
         {/* XP Gained */}
-        <Card>
+        <Card className="p-5">
           <div className="flex items-center justify-between mb-4">
             <h3 className="font-semibold flex items-center gap-2">
               <Zap className="w-5 h-5 text-purple-500" />
@@ -245,7 +245,7 @@ export const StatsPage: React.FC = () => {
         </Card>
 
         {/* Tasks by Category */}
-        <Card>
+        <Card className="p-5">
           <h3 className="font-semibold mb-4 flex items-center gap-2">
             <Calendar className="w-5 h-5 text-primary-500" />
             Répartition par catégorie
@@ -280,7 +280,7 @@ export const StatsPage: React.FC = () => {
         </Card>
 
         {/* Tasks by Priority */}
-        <Card>
+        <Card className="p-5">
           <h3 className="font-semibold mb-4 flex items-center gap-2">
             <Target className="w-5 h-5 text-primary-500" />
             Répartition par priorité
@@ -309,7 +309,7 @@ export const StatsPage: React.FC = () => {
       </div>
 
       {/* Game Stats */}
-      <Card>
+      <Card className="p-5">
         <h3 className="font-semibold mb-4 flex items-center gap-2">
           <Trophy className="w-5 h-5 text-yellow-500" />
           Statistiques de jeu

@@ -67,17 +67,17 @@ export const Sidebar: React.FC = () => {
         style={{ width: sidebarOpen ? '280px' : '80px' }}
         className={cn(
           'fixed left-0 top-0 h-screen z-50',
-          'bg-gradient-to-b from-white via-teal-50/30 to-cyan-50/30 dark:from-gray-900 dark:via-teal-900/10 dark:to-cyan-900/10',
-          'border-r-2 border-teal-100 dark:border-teal-900/30',
-          'overflow-hidden backdrop-blur-sm',
+          'bg-white/95 dark:bg-gray-900/95',
+          'border-r border-gray-200/80 dark:border-gray-700/50',
+          'overflow-hidden backdrop-blur-md',
           // On mobile: show only when open
           // On desktop: always show
           isMobile && !sidebarOpen ? 'hidden' : 'flex flex-col',
-          isMobile && sidebarOpen && 'shadow-soft-lg'
+          isMobile && sidebarOpen && 'shadow-2xl'
         )}
       >
         {/* Header */}
-        <div className="p-4 flex items-center justify-between border-b-2 border-teal-100 dark:border-teal-900/30 flex-shrink-0">
+        <div className="p-4 flex items-center justify-between border-b border-gray-100 dark:border-gray-800 flex-shrink-0">
           <AnimatePresence mode="wait">
             {sidebarOpen && (
               <motion.div
@@ -86,28 +86,28 @@ export const Sidebar: React.FC = () => {
                 exit={{ opacity: 0 }}
                 className="flex items-center gap-3"
               >
-                <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-teal-400 via-cyan-400 to-blue-400 flex items-center justify-center shadow-soft">
-                  <Sparkles className="w-6 h-6 text-white" />
+                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-teal-500 to-cyan-500 flex items-center justify-center shadow-md">
+                  <Sparkles className="w-5 h-5 text-white" />
                 </div>
-                <span className="font-bold text-xl gradient-text">Questify ✨</span>
+                <span className="font-bold text-lg text-gray-900 dark:text-white">Questify</span>
               </motion.div>
             )}
           </AnimatePresence>
           <button
             onClick={toggleSidebar}
-            className="p-2 rounded-2xl hover:bg-gradient-to-r hover:from-teal-50 hover:to-cyan-50 dark:hover:from-teal-900/20 dark:hover:to-cyan-900/20 transition-all duration-200"
+            className="p-2 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
           >
             {sidebarOpen ? (
-              <ChevronLeft className="w-5 h-5" />
+              <ChevronLeft className="w-5 h-5 text-gray-500" />
             ) : (
-              <Menu className="w-5 h-5" />
+              <Menu className="w-5 h-5 text-gray-500" />
             )}
           </button>
         </div>
 
         {/* User Section */}
         <div className={cn(
-          'p-4 border-b-2 border-teal-100 dark:border-teal-900/30 flex-shrink-0',
+          'p-4 border-b border-gray-100 dark:border-gray-800 flex-shrink-0',
           !sidebarOpen && 'flex justify-center'
         )}>
           <div className={cn(
@@ -149,9 +149,10 @@ export const Sidebar: React.FC = () => {
               to={item.path}
               className={({ isActive }) =>
                 cn(
-                  'flex items-center gap-3 px-3 py-2.5 rounded-2xl transition-all duration-200',
-                  'hover:bg-gradient-to-r hover:from-teal-50 hover:to-cyan-50 dark:hover:from-teal-900/20 dark:hover:to-cyan-900/20',
-                  isActive && 'bg-gradient-to-r from-primary-100 to-cyan-100 dark:from-primary-900/30 dark:to-cyan-900/30 text-primary-600 dark:text-primary-400 shadow-sm',
+                  'flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-200',
+                  'hover:bg-gray-100 dark:hover:bg-gray-800',
+                  isActive && 'bg-teal-50 dark:bg-teal-900/30 text-teal-600 dark:text-teal-400 font-medium',
+                  !isActive && 'text-gray-600 dark:text-gray-400',
                   !sidebarOpen && 'justify-center'
                 )
               }

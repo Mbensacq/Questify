@@ -69,26 +69,25 @@ export const Dashboard: React.FC = () => {
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-teal-400 via-cyan-400 to-blue-500 p-4 sm:p-6 text-white shadow-soft-lg"
+        className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-teal-500 via-cyan-500 to-blue-500 p-5 sm:p-6 text-white shadow-lg"
       >
-        <div className="absolute inset-0 bg-white/10 backdrop-blur-sm" />
         <div className="relative z-10">
           <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
             <div className="min-w-0 flex-1">
-              <h1 className="text-xl sm:text-2xl font-bold truncate">
-                Bonjour, {user.username}! 👋✨
+              <h1 className="text-xl sm:text-2xl font-bold">
+                Bonjour, {user.username}! 👋
               </h1>
-              <p className="mt-1 text-white/80 text-sm sm:text-base">
+              <p className="mt-1 text-white/80 text-sm">
                 {format(new Date(), "EEEE d MMMM", { locale: fr })}
               </p>
             </div>
             <Avatar config={user.avatar} size="lg" showLevel level={gameStats.level} />
           </div>
 
-          <div className="mt-4 sm:mt-6">
+          <div className="mt-5">
             <div className="flex items-center gap-3 mb-2">
               <span className="text-sm font-medium">Niveau {gameStats.level}</span>
-              <span className="text-sm text-white/60">{getLevelTitle(gameStats.level)}</span>
+              <span className="text-sm text-white/70">{getLevelTitle(gameStats.level)}</span>
             </div>
             <XPBar
               currentXP={gameStats.currentXP}
@@ -100,8 +99,8 @@ export const Dashboard: React.FC = () => {
         </div>
 
         {/* Decorative elements */}
-        <div className="absolute -right-8 -top-8 w-32 h-32 bg-white/10 rounded-full hidden sm:block" />
-        <div className="absolute -right-4 -bottom-4 w-24 h-24 bg-white/10 rounded-full hidden sm:block" />
+        <div className="absolute -right-10 -top-10 w-40 h-40 bg-white/10 rounded-full hidden sm:block" />
+        <div className="absolute -right-5 -bottom-5 w-28 h-28 bg-white/10 rounded-full hidden sm:block" />
       </motion.div>
 
       {/* Quick Stats */}

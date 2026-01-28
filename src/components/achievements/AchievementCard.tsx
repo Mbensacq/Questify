@@ -25,95 +25,88 @@ export const AchievementCard: React.FC<AchievementCardProps> = ({
   return (
     <div
       className={cn(
-        'relative overflow-hidden rounded-xl p-4 transition-shadow duration-200',
-        'bg-white dark:bg-gray-800 border',
+        'relative overflow-hidden rounded-2xl transition-all duration-200',
+        'bg-white dark:bg-gray-800/90 border',
         isUnlocked
-          ? 'border-yellow-400 shadow-lg shadow-yellow-400/20 hover:shadow-xl'
-          : 'border-gray-200 dark:border-gray-700 opacity-70'
+          ? 'border-yellow-400/50 shadow-lg shadow-yellow-400/10'
+          : 'border-gray-200 dark:border-gray-700/50 opacity-75 hover:opacity-90'
       )}
     >
-      {/* Rarity glow */}
+      {/* Rarity glow for unlocked */}
       {isUnlocked && (
         <div
-          className="absolute inset-0 opacity-10"
+          className="absolute inset-0 opacity-5"
           style={{ backgroundColor: RARITY_COLORS[achievement.rarity] }}
         />
       )}
 
-      <div className="relative flex items-start gap-4">
-        {/* Icon */}
+      <div className="relative flex items-center gap-4 p-4">
+        {/* Icon - centered vertically */}
         <div
           className={cn(
-            'w-14 h-14 rounded-xl flex items-center justify-center text-3xl',
-            isUnlocked ? 'bg-gradient-to-br from-yellow-400 to-amber-500' : 'bg-gray-200 dark:bg-gray-700'
+            'w-14 h-14 rounded-xl flex items-center justify-center text-2xl flex-shrink-0',
+            isUnlocked 
+              ? 'bg-gradient-to-br from-yellow-400 to-amber-500 shadow-md' 
+              : 'bg-gray-100 dark:bg-gray-700/80'
           )}
         >
           {isUnlocked ? (
             <span>{achievement.icon}</span>
           ) : (
-            <Lock className="w-6 h-6 text-gray-400" />
+            <Lock className="w-6 h-6 text-gray-400 dark:text-gray-500" />
           )}
         </div>
 
         {/* Content */}
         <div className="flex-1 min-w-0">
-          <div className="flex items-start justify-between">
-            <div>
+          <div className="flex items-start justify-between gap-2">
+            <div className="min-w-0">
               <h3 className={cn(
-                'font-bold',
-                isUnlocked ? 'text-gray-900 dark:text-white' : 'text-gray-500 dark:text-gray-400'
+                'font-semibold truncate',
+                isUnlocked ? 'text-gray-900 dark:text-white' : 'text-gray-600 dark:text-gray-400'
               )}>
                 {achievement.secret && !isUnlocked ? '???' : achievement.name}
               </h3>
-              <p className="text-sm text-gray-500 dark:text-gray-400 mt-0.5">
+              <p className="text-sm text-gray-500 dark:text-gray-400 mt-0.5 line-clamp-1">
                 {achievement.secret && !isUnlocked 
                   ? 'Achievement secret' 
                   : achievement.description}
               </p>
             </div>
-            <Badge rarity={achievement.rarity} size="sm">
-              {RARITY_LABELS[achievement.rarity]}
-            </Badge>
           </div>
 
-          {/* Progress */}
+          {/* Progress bar for locked achievements */}
           {!isUnlocked && !achievement.secret && (
-            <div className="mt-3">
-              <div className="flex justify-between text-xs text-gray-500 mb-1">
-                <span>Progression</span>
-                <span>{progress} / {achievement.requirement.value}</span>
+            <div className="mt-2">
+              <div className="h-1.5 bg-gray-100 dark:bg-gray-700 rounded-full overflow-hidden">
+                <div
+                  className="h-full bg-gradient-to-r from-teal-400 to-cyan-500 rounded-full transition-all duration-300"
+                  style={{ width: `${progressPercentage}%` }}
+                />
               </div>
-              <ProgressBar
-                value={progress}
-                max={achievement.requirement.value}
-                color="gold"
-                size="sm"
-              />
             </div>
           )}
 
           {/* Rewards */}
-          <div className="flex items-center gap-3 mt-3">
-            <span className="flex items-center gap-1 text-xs text-green-600 dark:text-green-400">
-              <Star className="w-3 h-3" />
-              {achievement.xpReward} XP
+          <div className="flex items-center gap-3 mt-2">
+            <span className="flex items-center gap-1 text-xs font-medium text-teal-600 dark:text-teal-400">
+              +{achievement.xpReward} XP
             </span>
-            <span className="flex items-center gap-1 text-xs text-yellow-600 dark:text-yellow-400">
-              <Gift className="w-3 h-3" />
-              {achievement.coinReward} pièces
+            <span className="flex items-center gap-1 text-xs font-medium text-amber-600 dark:text-amber-400">
+              +{achievement.coinReward} 🪙
             </span>
           </div>
         </div>
-      </div>
 
-      {/* Unlocked badge */}
-      {isUnlocked && (
-        <div className="absolute top-2 right-2">
-          <div className="w-6 h-6 rounded-full bg-green-500 flex items-center justify-center">
-            <Trophy className="w-3 h-3 text-white" />
+        {/* Unlocked checkmark */}
+        {isUnlocked && (
+          <div className="flex-shrink-0">
+            <div className="w-8 h-8 rounded-full bg-green-500 flex items-center justify-center shadow-md">
+              <Trophy className="w-4 h-4 text-white" />
+            </div>
           </div>
-        </div>
-      )}
+        )}
+      </div>
     </div>
   );
 };

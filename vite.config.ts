@@ -4,9 +4,8 @@ import { VitePWA } from 'vite-plugin-pwa'
 import path from 'path'
 
 export default defineConfig({
-  // Pour GitHub Pages: remplace 'questify' par le nom de ton repo
-  // Laisse '/' si tu utilises un domaine personnalisé ou username.github.io
-  base: process.env.GITHUB_ACTIONS ? '/questify/' : '/',
+  // Pour GitHub Pages: utilise le nom de ton repo
+  base: process.env.GITHUB_ACTIONS ? '/OmniTaskV1/' : '/',
   plugins: [
     react(),
     VitePWA({
@@ -44,6 +43,5 @@ export default defineConfig({
     alias: {
       '@': path.resolve(__dirname, './src')
     }
-  },
-  base: './'
+  }
 })

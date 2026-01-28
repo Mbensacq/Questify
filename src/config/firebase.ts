@@ -3,16 +3,15 @@ import { getAuth, GoogleAuthProvider, GithubAuthProvider } from 'firebase/auth';
 import { getFirestore } from 'firebase/firestore';
 import { getAnalytics, isSupported } from 'firebase/analytics';
 
-// Configuration Firebase - À REMPLACER par vos propres clés
-// Créez un projet sur https://console.firebase.google.com
+// Configuration Firebase
 const firebaseConfig = {
-  apiKey: import.meta.env.VITE_FIREBASE_API_KEY || "YOUR_API_KEY",
-  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN || "YOUR_PROJECT.firebaseapp.com",
-  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID || "YOUR_PROJECT_ID",
-  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET || "YOUR_PROJECT.appspot.com",
-  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID || "YOUR_SENDER_ID",
-  appId: import.meta.env.VITE_FIREBASE_APP_ID || "YOUR_APP_ID",
-  measurementId: import.meta.env.VITE_FIREBASE_MEASUREMENT_ID || "YOUR_MEASUREMENT_ID"
+  apiKey: import.meta.env.VITE_FIREBASE_API_KEY || "AIzaSyBMgyg_KLqvZIxViT_qzgxtEHHEp8dkbGU",
+  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN || "omnitask-9aceb.firebaseapp.com",
+  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID || "omnitask-9aceb",
+  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET || "omnitask-9aceb.firebasestorage.app",
+  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID || "531435434202",
+  appId: import.meta.env.VITE_FIREBASE_APP_ID || "1:531435434202:web:34a8a4c9f59a661665b5e3",
+  measurementId: import.meta.env.VITE_FIREBASE_MEASUREMENT_ID || "G-RD63ZQPQT2"
 };
 
 // Initialize Firebase

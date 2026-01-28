@@ -201,7 +201,7 @@ export const ProfilePage: React.FC = () => {
       {/* Content Grid */}
       <div className="grid lg:grid-cols-2 gap-6">
         {/* Recent Achievements */}
-        <Card>
+        <Card className="p-5">
           <h3 className="font-semibold mb-4 flex items-center gap-2">
             <Trophy className="w-5 h-5 text-yellow-500" />
             Achievements récents
@@ -233,7 +233,7 @@ export const ProfilePage: React.FC = () => {
         </Card>
 
         {/* Game Stats */}
-        <Card>
+        <Card className="p-5">
           <h3 className="font-semibold mb-4 flex items-center gap-2">
             <Star className="w-5 h-5 text-primary-500" />
             Statistiques de jeu

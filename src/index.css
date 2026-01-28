@@ -4,18 +4,18 @@
 
 @layer base {
   :root {
-    --color-bg-primary: #fafcfc;
-    --color-bg-secondary: #f0f9f9;
-    --color-bg-tertiary: #e6f5f5;
-    --color-text-primary: #1e3a3a;
+    --color-bg-primary: #f8fafa;
+    --color-bg-secondary: #f0f7f7;
+    --color-bg-tertiary: #e8f4f4;
+    --color-text-primary: #1a2e2e;
     --color-text-secondary: #3d5a5a;
     --color-text-muted: #6b8a8a;
   }
 
   .dark {
-    --color-bg-primary: #0f1a1a;
-    --color-bg-secondary: #142424;
-    --color-bg-tertiary: #1a2f2f;
+    --color-bg-primary: #0c1414;
+    --color-bg-secondary: #111c1c;
+    --color-bg-tertiary: #162626;
     --color-text-primary: #e8f5f5;
     --color-text-secondary: #c5dada;
     --color-text-muted: #8aabab;
@@ -60,19 +60,19 @@
 
 @layer components {
   .btn {
-    @apply px-4 py-2 rounded-lg font-medium transition-all duration-200 
+    @apply px-4 py-2.5 rounded-xl font-semibold transition-all duration-200 
            disabled:opacity-50 disabled:cursor-not-allowed
            focus:outline-none focus:ring-2 focus:ring-offset-2;
   }
 
   .btn-primary {
-    @apply btn bg-primary-500 text-white hover:bg-primary-600 
-           focus:ring-primary-500 active:bg-primary-700;
+    @apply btn bg-teal-500 text-white hover:bg-teal-600 
+           focus:ring-teal-500 active:bg-teal-700;
   }
 
   .btn-secondary {
-    @apply btn bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 
-           hover:bg-gray-300 dark:hover:bg-gray-600 focus:ring-gray-500;
+    @apply btn bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-200 
+           hover:bg-gray-200 dark:hover:bg-gray-600 focus:ring-gray-400;
   }
 
   .btn-danger {
@@ -81,33 +81,34 @@
   }
 
   .btn-success {
-    @apply btn bg-green-500 text-white hover:bg-green-600 
-           focus:ring-green-500 active:bg-green-700;
+    @apply btn bg-emerald-500 text-white hover:bg-emerald-600 
+           focus:ring-emerald-500 active:bg-emerald-700;
   }
 
   .btn-game {
-    @apply btn bg-gradient-to-r from-primary-500 to-purple-500 text-white 
-           hover:from-primary-600 hover:to-purple-600 
-           shadow-lg hover:shadow-xl transform hover:-translate-y-0.5;
+    @apply btn bg-gradient-to-r from-teal-500 to-cyan-500 text-white 
+           hover:from-teal-600 hover:to-cyan-600 
+           shadow-lg hover:shadow-xl;
   }
 
   .card {
-    @apply bg-white dark:bg-gray-800 rounded-xl shadow-lg 
-           border border-gray-100 dark:border-gray-700;
+    @apply bg-white dark:bg-gray-800/80 rounded-2xl 
+           border border-gray-100 dark:border-gray-700/50
+           shadow-sm backdrop-blur-sm;
   }
 
   .card-game {
-    @apply card bg-gradient-to-br from-white to-gray-50 
-           dark:from-gray-800 dark:to-gray-900
-           hover:shadow-xl transition-shadow duration-300;
+    @apply card bg-gradient-to-br from-white to-gray-50/50 
+           dark:from-gray-800/80 dark:to-gray-900/50
+           hover:shadow-md transition-shadow duration-300;
   }
 
   .input {
-    @apply w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600
+    @apply w-full px-4 py-2.5 rounded-xl border border-gray-200 dark:border-gray-600
            bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100
-           focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent
+           focus:outline-none focus:ring-2 focus:ring-teal-500/50 focus:border-teal-500
            placeholder-gray-400 dark:placeholder-gray-500
-           transition-colors duration-200;
+           transition-all duration-200;
   }
 
   .badge {

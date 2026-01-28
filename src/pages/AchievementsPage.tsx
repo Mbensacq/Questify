@@ -117,7 +117,7 @@ export const AchievementsPage: React.FC = () => {
       </div>
 
       {/* Progress by Rarity */}
-      <Card>
+      <Card className="p-5">
         <h3 className="font-semibold mb-4 flex items-center gap-2">
           <Sparkles className="w-5 h-5 text-primary-500" />
           Progression par rareté
