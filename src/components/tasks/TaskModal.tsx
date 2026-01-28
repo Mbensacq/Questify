@@ -142,9 +142,10 @@ export const TaskModal: React.FC<TaskModalProps> = ({
 
       onClose();
       resetForm();
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error saving task:', error);
-      setErrors({ general: 'Une erreur est survenue lors de la création de la tâche' });
+      const errorMessage = error?.message || 'Une erreur est survenue lors de la création de la tâche';
+      setErrors({ general: errorMessage });
     } finally {
       setIsLoading(false);
     }

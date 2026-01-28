@@ -134,11 +134,12 @@ export const useTaskStore = create<TaskState>()(
         const isDemo = useAuthStore.getState().isDemo;
         
         if (isDemo) {
-          // In demo mode, tasks are already in persisted state
+          // In demo mode, tasks are already in persisted state (localStorage)
           set({ isLoading: false });
           return;
         }
         
+        // Firebase = source of truth for multi-device sync
         try {
           const tasksRef = collection(db, 'tasks');
           const q = query(tasksRef, where('userId', '==', userId));
@@ -156,8 +157,9 @@ export const useTaskStore = create<TaskState>()(
           
           set({ tasks, isLoading: false });
         } catch (error) {
-          console.error('Error loading tasks:', error);
+          console.error('Error loading tasks from Firebase:', error);
           set({ isLoading: false });
+          throw new Error('Impossible de charger les tâches. Vérifiez votre connexion.');
         }
       },
 
@@ -186,14 +188,19 @@ export const useTaskStore = create<TaskState>()(
         if (isDemo) {
           task = { ...newTask, id: uuidv4() } as Task;
         } else {
+          // Must save to Firebase for multi-device sync
           const docRef = await addDoc(collection(db, 'tasks'), newTask);
           task = { ...newTask, id: docRef.id } as Task;
         }
         
         set(state => ({ tasks: [...state.tasks, task] }));
         
-        // Incrémenter le compteur de tâches créées
-        await useAuthStore.getState().incrementStat('tasksCreated');
+        // Incrémenter le compteur de tâches créées (ignore errors)
+        try {
+          await useAuthStore.getState().incrementStat('tasksCreated');
+        } catch (e) {
+          console.warn('Could not increment stat:', e);
+        }
         
         return task;
       },
@@ -217,7 +224,11 @@ export const useTaskStore = create<TaskState>()(
         const isDemo = useAuthStore.getState().isDemo;
         
         if (!isDemo) {
-          await deleteDoc(doc(db, 'tasks', id));
+          try {
+            await deleteDoc(doc(db, 'tasks', id));
+          } catch (e) {
+            console.warn('Firebase delete failed:', e);
+          }
         }
         
         set(state => ({
@@ -238,8 +249,13 @@ export const useTaskStore = create<TaskState>()(
           progress: 100,
         };
 
+        // Update Firebase if not in demo mode (but don't fail if it errors)
         if (!isDemo) {
-          await updateDoc(doc(db, 'tasks', id), updates);
+          try {
+            await updateDoc(doc(db, 'tasks', id), updates);
+          } catch (e) {
+            console.warn('Firebase update failed, continuing locally:', e);
+          }
         }
         
         set(state => ({
@@ -248,46 +264,51 @@ export const useTaskStore = create<TaskState>()(
           )
         }));
 
-        // Ajouter les récompenses
-        const authStore = useAuthStore.getState();
-        const { leveledUp, newLevel } = await authStore.addXP(task.xpReward);
-        await authStore.addCoins(task.coinReward);
-        await authStore.incrementStat('tasksCompleted');
-        await authStore.incrementStat('dailyTasksCompleted');
-        await authStore.incrementStat('weeklyTasksCompleted');
-        await authStore.updateStreak();
+        // Ajouter les récompenses (wrap in try-catch to prevent failures)
+        try {
+          const authStore = useAuthStore.getState();
+          const { leveledUp, newLevel } = await authStore.addXP(task.xpReward);
+          await authStore.addCoins(task.coinReward);
+          await authStore.incrementStat('tasksCompleted');
+          await authStore.incrementStat('dailyTasksCompleted');
+          await authStore.incrementStat('weeklyTasksCompleted');
+          await authStore.updateStreak();
 
-        // Vérifier les achievements liés aux tâches
-        const { ACHIEVEMENTS } = await import('../config/achievements');
-        const gameStats = useAuthStore.getState().gameStats;
-        
-        if (gameStats) {
-          const tasksCompleted = gameStats.tasksCompleted;
+          // Vérifier les achievements liés aux tâches
+          const { ACHIEVEMENTS } = await import('../config/achievements');
+          const gameStats = useAuthStore.getState().gameStats;
           
-          // Vérifier chaque achievement de type tasks_completed
-          for (const achievement of ACHIEVEMENTS) {
-            if (achievement.requirement.type === 'tasks_completed' &&
-                tasksCompleted >= achievement.requirement.value &&
-                !gameStats.achievementsUnlocked.includes(achievement.id)) {
-              await authStore.unlockAchievement(achievement.id);
+          if (gameStats) {
+            const tasksCompleted = gameStats.tasksCompleted;
+            
+            // Vérifier chaque achievement de type tasks_completed
+            for (const achievement of ACHIEVEMENTS) {
+              if (achievement.requirement.type === 'tasks_completed' &&
+                  tasksCompleted >= achievement.requirement.value &&
+                  !gameStats.achievementsUnlocked.includes(achievement.id)) {
+                await authStore.unlockAchievement(achievement.id);
+              }
             }
           }
+
+          // Mettre à jour les quêtes
+          const { useQuestStore } = await import('./questStore');
+          await useQuestStore.getState().checkAndUpdateQuests('task_completed', {
+            category: task.category,
+            priority: task.priority,
+            difficulty: task.difficulty,
+          });
+
+          return { 
+            xpGained: task.xpReward, 
+            coinsGained: task.coinReward,
+            leveledUp,
+            newLevel
+          };
+        } catch (e) {
+          console.warn('Error updating stats:', e);
+          return { xpGained: task.xpReward, coinsGained: task.coinReward };
         }
-
-        // Mettre à jour les quêtes
-        const { useQuestStore } = await import('./questStore');
-        await useQuestStore.getState().checkAndUpdateQuests('task_completed', {
-          category: task.category,
-          priority: task.priority,
-          difficulty: task.difficulty,
-        });
-
-        return { 
-          xpGained: task.xpReward, 
-          coinsGained: task.coinReward,
-          leveledUp,
-          newLevel
-        };
       },
 
       failTask: async (id) => {
@@ -298,7 +319,11 @@ export const useTaskStore = create<TaskState>()(
         };
 
         if (!isDemo) {
-          await updateDoc(doc(db, 'tasks', id), updates);
+          try {
+            await updateDoc(doc(db, 'tasks', id), updates);
+          } catch (e) {
+            console.warn('Firebase update failed:', e);
+          }
         }
         
         set(state => ({
@@ -307,7 +332,11 @@ export const useTaskStore = create<TaskState>()(
           )
         }));
 
-        await useAuthStore.getState().incrementStat('tasksFailed');
+        try {
+          await useAuthStore.getState().incrementStat('tasksFailed');
+        } catch (e) {
+          console.warn('Could not increment stat:', e);
+        }
       },
 
       archiveTask: async (id) => {
