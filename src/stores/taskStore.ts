@@ -179,7 +179,7 @@ export const useTaskStore = create<TaskState>()(
           priority: taskData.priority,
           status: taskData.status || 'pending',
           category: taskData.category || 'personal',
-          isRecurring: taskData.isRecurring || false,
+          recurrence: taskData.recurrence || 'none',
           userId,
           createdAt: new Date(),
           updatedAt: new Date(),
@@ -189,7 +189,7 @@ export const useTaskStore = create<TaskState>()(
           tags: taskData.tags || [],
           progress: 0,
           ...(taskData.dueDate && { dueDate: taskData.dueDate }),
-          ...(taskData.recurringPattern && { recurringPattern: taskData.recurringPattern }),
+          ...(taskData.recurrenceConfig && { recurrenceConfig: taskData.recurrenceConfig }),
         };
 
         let task: Task;
