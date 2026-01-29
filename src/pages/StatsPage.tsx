@@ -67,8 +67,14 @@ export const StatsPage: React.FC = () => {
     ).length;
   });
 
-  // XP gained per day (mock data - would need to track this)
-  const xpByDay = dateRange.map((_, i) => Math.floor(Math.random() * 500) + 100);
+  // XP gained per day (calculated from completed tasks' xpReward)
+  const xpByDay = dateRange.map((date) => {
+    return tasks
+      .filter(
+        (t) => t.status === 'completed' && t.completedAt && isSameDay(new Date(t.completedAt), date)
+      )
+      .reduce((total, task) => total + (task.xpReward || 0), 0);
+  });
 
   // Tasks by category
   const tasksByCategory = categories.map((cat) => ({
