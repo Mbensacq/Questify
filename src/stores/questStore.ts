@@ -29,6 +29,7 @@ interface QuestState {
   // Quest management
   loadQuests: (userId: string) => Promise<void>;
   generateNewQuests: (userId: string) => Promise<void>;
+  forceRegenerateQuests: (userId: string) => Promise<void>;
   updateQuestProgress: (questId: string, objectiveId: string, progress: number) => Promise<void>;
   completeQuest: (questId: string) => Promise<void>;
   claimQuestRewards: (questId: string) => Promise<{ xp: number; coins: number; gems?: number }>;
@@ -125,19 +126,21 @@ export const useQuestStore = create<QuestState>()(
           
           const hasValidDailyQuests = existingQuests.some(q => 
             q.type === 'daily' && 
-            new Date(q.startDate).toDateString() === today.toDateString() &&
-            !q.claimed
+            new Date(q.startDate).toDateString() === today.toDateString()
           );
           
           const hasValidWeeklyQuests = existingQuests.some(q => 
             q.type === 'weekly' && 
-            new Date(q.startDate) >= startOfWeek &&
-            !q.claimed
+            new Date(q.startDate) >= startOfWeek
           );
+          
+          console.log('[Quests] Has valid daily quests:', hasValidDailyQuests, 'Has valid weekly:', hasValidWeeklyQuests);
+          console.log('[Quests] Existing quests:', existingQuests.length);
           
           set({ isLoading: false });
           
-          if (!hasValidDailyQuests || !hasValidWeeklyQuests || needsDailyRefresh || needsWeeklyRefresh) {
+          // Always generate if no valid quests exist for today/this week
+          if (!hasValidDailyQuests || !hasValidWeeklyQuests) {
             console.log('[Quests] Generating new quests (demo mode)');
             await get().generateNewQuests(userId);
           }
@@ -276,6 +279,71 @@ export const useQuestStore = create<QuestState>()(
         });
       },
 
+      forceRegenerateQuests: async (userId) => {
+        const isDemo = useAuthStore.getState().isDemo;
+        console.log('[Quests] Force regenerating all quests for user:', userId);
+        
+        // Clear all existing quests
+        const { quests } = get();
+        if (!isDemo) {
+          for (const quest of quests) {
+            try {
+              await deleteDoc(doc(db, 'quests', quest.id));
+            } catch (e) {
+              console.error('Error deleting quest:', e);
+            }
+          }
+        }
+        
+        // Reset state
+        set({ 
+          quests: [], 
+          lastDailyRefresh: null, 
+          lastWeeklyRefresh: null 
+        });
+        
+        // Generate fresh quests
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        const todayStr = today.toISOString().split('T')[0];
+        
+        const startOfWeek = new Date(today);
+        const dayOfWeek = startOfWeek.getDay();
+        const daysToMonday = dayOfWeek === 0 ? 6 : dayOfWeek - 1;
+        startOfWeek.setDate(startOfWeek.getDate() - daysToMonday);
+        const weekStr = startOfWeek.toISOString().split('T')[0];
+        
+        const newQuests: Quest[] = [];
+        
+        // Generate daily quests
+        const dailyTemplates = generateDailyQuests();
+        for (const template of dailyTemplates) {
+          const quest = createQuestFromTemplate(template, userId);
+          if (!isDemo) {
+            await setDoc(doc(db, 'quests', quest.id), quest);
+          }
+          newQuests.push(quest);
+        }
+        
+        // Generate weekly quests
+        const weeklyTemplates = generateWeeklyQuests();
+        for (const template of weeklyTemplates) {
+          const quest = createQuestFromTemplate(template, userId);
+          if (!isDemo) {
+            await setDoc(doc(db, 'quests', quest.id), quest);
+          }
+          newQuests.push(quest);
+        }
+        
+        console.log('[Quests] Generated', newQuests.length, 'new quests');
+        
+        set({ 
+          quests: newQuests,
+          lastDailyRefresh: todayStr,
+          lastWeeklyRefresh: weekStr,
+        });
+      },
+
       updateQuestProgress: async (questId, objectiveId, progress) => {
         const quest = get().quests.find(q => q.id === questId);
         if (!quest) return;
@@ -360,11 +428,27 @@ export const useQuestStore = create<QuestState>()(
       },
 
       getDailyQuests: () => {
-        return get().quests.filter(q => q.type === 'daily');
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        return get().quests.filter(q => 
+          q.type === 'daily' && 
+          new Date(q.startDate).toDateString() === today.toDateString()
+        );
       },
 
       getWeeklyQuests: () => {
-        return get().quests.filter(q => q.type === 'weekly');
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        // Get start of current week (Monday)
+        const startOfWeek = new Date(today);
+        const dayOfWeek = startOfWeek.getDay();
+        const daysToMonday = dayOfWeek === 0 ? 6 : dayOfWeek - 1;
+        startOfWeek.setDate(startOfWeek.getDate() - daysToMonday);
+        
+        return get().quests.filter(q => 
+          q.type === 'weekly' && 
+          new Date(q.startDate) >= startOfWeek
+        );
       },
       
       // Alias for claimQuestRewards
