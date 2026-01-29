@@ -72,6 +72,46 @@ function App() {
     }
   }, [user, loadCategories, loadTasks, loadQuests]);
 
+  // Auto-refresh quests on focus and at midnight
+  useEffect(() => {
+    if (!user) return;
+
+    // Refresh quests when window regains focus
+    const handleFocus = () => {
+      loadQuests(user.id);
+    };
+
+    // Calculate time until midnight
+    const now = new Date();
+    const tomorrow = new Date(now);
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    tomorrow.setHours(0, 0, 0, 0);
+    const msUntilMidnight = tomorrow.getTime() - now.getTime();
+
+    // Set timeout for midnight refresh
+    const midnightTimeout = setTimeout(() => {
+      loadQuests(user.id);
+      // Then set interval for subsequent days
+      const dailyInterval = setInterval(() => {
+        loadQuests(user.id);
+      }, 24 * 60 * 60 * 1000);
+      
+      return () => clearInterval(dailyInterval);
+    }, msUntilMidnight);
+
+    window.addEventListener('focus', handleFocus);
+    document.addEventListener('visibilitychange', () => {
+      if (document.visibilityState === 'visible') {
+        handleFocus();
+      }
+    });
+
+    return () => {
+      window.removeEventListener('focus', handleFocus);
+      clearTimeout(midnightTimeout);
+    };
+  }, [user, loadQuests]);
+
   // Handle theme changes
   useEffect(() => {
     const root = document.documentElement;

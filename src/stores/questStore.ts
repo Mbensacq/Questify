@@ -19,6 +19,8 @@ import { useAuthStore } from './authStore';
 interface QuestState {
   quests: Quest[];
   isLoading: boolean;
+  lastDailyRefresh: string | null;
+  lastWeeklyRefresh: string | null;
   
   // Computed properties
   dailyQuests: Quest[];
@@ -84,6 +86,8 @@ export const useQuestStore = create<QuestState>()(
     (set, get) => ({
       quests: [],
       isLoading: false,
+      lastDailyRefresh: null,
+      lastWeeklyRefresh: null,
       
       // Computed - these are dynamically derived from quests
       get dailyQuests() {
@@ -96,31 +100,45 @@ export const useQuestStore = create<QuestState>()(
       loadQuests: async (userId) => {
         set({ isLoading: true });
         const isDemo = useAuthStore.getState().isDemo;
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        const todayStr = today.toISOString().split('T')[0];
+        
+        // Get start of current week (Monday)
+        const startOfWeek = new Date(today);
+        const dayOfWeek = startOfWeek.getDay();
+        const daysToMonday = dayOfWeek === 0 ? 6 : dayOfWeek - 1;
+        startOfWeek.setDate(startOfWeek.getDate() - daysToMonday);
+        const weekStr = startOfWeek.toISOString().split('T')[0];
+        
+        const { lastDailyRefresh, lastWeeklyRefresh } = get();
+        const needsDailyRefresh = lastDailyRefresh !== todayStr;
+        const needsWeeklyRefresh = lastWeeklyRefresh !== weekStr;
+        
+        console.log('[Quests] Loading quests for user:', userId);
+        console.log('[Quests] Today:', todayStr, 'Last daily refresh:', lastDailyRefresh);
+        console.log('[Quests] Week start:', weekStr, 'Last weekly refresh:', lastWeeklyRefresh);
         
         if (isDemo) {
           // In demo mode, check if we need to generate quests
-          const existingQuests = get().quests;
-          const today = new Date();
-          today.setHours(0, 0, 0, 0);
+          const existingQuests = get().quests.filter(q => q.userId === userId);
           
           const hasValidDailyQuests = existingQuests.some(q => 
             q.type === 'daily' && 
-            q.userId === userId &&
-            new Date(q.startDate).toDateString() === today.toDateString()
+            new Date(q.startDate).toDateString() === today.toDateString() &&
+            !q.claimed
           );
-          
-          const startOfWeek = new Date(today);
-          startOfWeek.setDate(startOfWeek.getDate() - startOfWeek.getDay());
           
           const hasValidWeeklyQuests = existingQuests.some(q => 
             q.type === 'weekly' && 
-            q.userId === userId &&
-            new Date(q.startDate) >= startOfWeek
+            new Date(q.startDate) >= startOfWeek &&
+            !q.claimed
           );
           
           set({ isLoading: false });
           
-          if (!hasValidDailyQuests || !hasValidWeeklyQuests) {
+          if (!hasValidDailyQuests || !hasValidWeeklyQuests || needsDailyRefresh || needsWeeklyRefresh) {
+            console.log('[Quests] Generating new quests (demo mode)');
             await get().generateNewQuests(userId);
           }
           return;
@@ -173,25 +191,48 @@ export const useQuestStore = create<QuestState>()(
         const isDemo = useAuthStore.getState().isDemo;
         const today = new Date();
         today.setHours(0, 0, 0, 0);
+        const todayStr = today.toISOString().split('T')[0];
         
-        // Supprimer les anciennes quêtes expirées
-        const expiredQuests = quests.filter(q => new Date(q.endDate) < today);
+        // Get start of current week (Monday)
+        const startOfWeek = new Date(today);
+        const dayOfWeek = startOfWeek.getDay();
+        const daysToMonday = dayOfWeek === 0 ? 6 : dayOfWeek - 1;
+        startOfWeek.setDate(startOfWeek.getDate() - daysToMonday);
+        const weekStr = startOfWeek.toISOString().split('T')[0];
+        
+        console.log('[Quests] Generating new quests for user:', userId);
+        
+        // Remove expired or claimed quests
+        const expiredOrClaimedQuests = quests.filter(q => 
+          new Date(q.endDate) < today || q.claimed
+        );
         if (!isDemo) {
-          for (const quest of expiredQuests) {
-            await deleteDoc(doc(db, 'quests', quest.id));
+          for (const quest of expiredOrClaimedQuests) {
+            try {
+              await deleteDoc(doc(db, 'quests', quest.id));
+            } catch (e) {
+              console.error('Error deleting quest:', e);
+            }
           }
         }
         
-        // Garder les quêtes valides
-        const validQuests = quests.filter(q => new Date(q.endDate) >= today);
+        // Keep only valid unclaimed quests
+        let validQuests = quests.filter(q => 
+          new Date(q.endDate) >= today && !q.claimed && q.userId === userId
+        );
         
-        // Générer de nouvelles quêtes journalières
+        // Check for today's daily quests
         const hasTodayDailies = validQuests.some(q => 
           q.type === 'daily' && 
           new Date(q.startDate).toDateString() === today.toDateString()
         );
         
+        let dailyRefreshed = false;
         if (!hasTodayDailies) {
+          console.log('[Quests] Generating new daily quests');
+          // Remove old daily quests
+          validQuests = validQuests.filter(q => q.type !== 'daily');
+          
           const dailyTemplates = generateDailyQuests();
           for (const template of dailyTemplates) {
             const quest = createQuestFromTemplate(template, userId);
@@ -200,18 +241,21 @@ export const useQuestStore = create<QuestState>()(
             }
             validQuests.push(quest);
           }
+          dailyRefreshed = true;
         }
         
-        // Générer de nouvelles quêtes hebdomadaires
-        const startOfWeek = new Date(today);
-        startOfWeek.setDate(startOfWeek.getDate() - startOfWeek.getDay());
-        
+        // Check for this week's weekly quests
         const hasWeeklies = validQuests.some(q => 
           q.type === 'weekly' && 
           new Date(q.startDate) >= startOfWeek
         );
         
+        let weeklyRefreshed = false;
         if (!hasWeeklies) {
+          console.log('[Quests] Generating new weekly quests');
+          // Remove old weekly quests
+          validQuests = validQuests.filter(q => q.type !== 'weekly');
+          
           const weeklyTemplates = generateWeeklyQuests();
           for (const template of weeklyTemplates) {
             const quest = createQuestFromTemplate(template, userId);
@@ -220,9 +264,16 @@ export const useQuestStore = create<QuestState>()(
             }
             validQuests.push(quest);
           }
+          weeklyRefreshed = true;
         }
         
-        set({ quests: validQuests });
+        console.log('[Quests] Valid quests after refresh:', validQuests.length);
+        
+        set({ 
+          quests: validQuests,
+          lastDailyRefresh: dailyRefreshed ? todayStr : get().lastDailyRefresh || todayStr,
+          lastWeeklyRefresh: weeklyRefreshed ? weekStr : get().lastWeeklyRefresh || weekStr,
+        });
       },
 
       updateQuestProgress: async (questId, objectiveId, progress) => {
