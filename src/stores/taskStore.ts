@@ -31,6 +31,10 @@ import {
 import { db } from '../config/firebase';
 import { useAuthStore } from './authStore';
 
+// Store unsubscribe functions for real-time listeners
+let tasksUnsubscribe: (() => void) | null = null;
+let categoriesUnsubscribe: (() => void) | null = null;
+
 interface TaskState {
   tasks: Task[];
   categories: Category[];
@@ -41,6 +45,8 @@ interface TaskState {
   
   // Task CRUD
   loadTasks: (userId: string) => Promise<void>;
+  subscribeToTasks: (userId: string) => void;
+  unsubscribeFromTasks: () => void;
   addTask: (task: Omit<Task, 'id' | 'createdAt' | 'updatedAt' | 'xpReward' | 'coinReward'>) => Promise<Task>;
   updateTask: (id: string, updates: Partial<Task>) => Promise<void>;
   deleteTask: (id: string) => Promise<void>;
@@ -139,27 +145,60 @@ export const useTaskStore = create<TaskState>()(
           return;
         }
         
-        // Firebase = source of truth for multi-device sync
+        // For Firebase, use real-time subscription instead
+        get().subscribeToTasks(userId);
+      },
+
+      subscribeToTasks: (userId) => {
+        const isDemo = useAuthStore.getState().isDemo;
+        if (isDemo) return;
+
+        // Unsubscribe from previous listener if any
+        if (tasksUnsubscribe) {
+          tasksUnsubscribe();
+        }
+
+        set({ isLoading: true });
+
         try {
           const tasksRef = collection(db, 'tasks');
           const q = query(tasksRef, where('userId', '==', userId));
-          const snapshot = await getDocs(q);
           
-          const tasks = snapshot.docs.map(doc => ({
-            ...doc.data(),
-            id: doc.id,
-            createdAt: doc.data().createdAt?.toDate() || new Date(),
-            updatedAt: doc.data().updatedAt?.toDate() || new Date(),
-            dueDate: doc.data().dueDate?.toDate(),
-            completedAt: doc.data().completedAt?.toDate(),
-            startedAt: doc.data().startedAt?.toDate(),
-          })) as Task[];
-          
-          set({ tasks, isLoading: false });
+          // Real-time listener
+          tasksUnsubscribe = onSnapshot(q, 
+            (snapshot) => {
+              const tasks = snapshot.docs.map(doc => ({
+                ...doc.data(),
+                id: doc.id,
+                createdAt: doc.data().createdAt?.toDate() || new Date(),
+                updatedAt: doc.data().updatedAt?.toDate() || new Date(),
+                dueDate: doc.data().dueDate?.toDate(),
+                completedAt: doc.data().completedAt?.toDate(),
+                startedAt: doc.data().startedAt?.toDate(),
+              })) as Task[];
+              
+              console.log('[Tasks] Real-time update:', tasks.length, 'tasks');
+              set({ tasks, isLoading: false });
+            },
+            (error) => {
+              console.error('[Tasks] Real-time listener error:', error);
+              set({ isLoading: false });
+            }
+          );
         } catch (error) {
-          console.error('Error loading tasks from Firebase:', error);
+          console.error('Error setting up tasks listener:', error);
           set({ isLoading: false });
-          throw new Error('Impossible de charger les tâches. Vérifiez votre connexion.');
+        }
+      },
+
+      unsubscribeFromTasks: () => {
+        if (tasksUnsubscribe) {
+          tasksUnsubscribe();
+          tasksUnsubscribe = null;
+        }
+        if (categoriesUnsubscribe) {
+          categoriesUnsubscribe();
+          categoriesUnsubscribe = null;
         }
       },
 

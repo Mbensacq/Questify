@@ -18,8 +18,12 @@ import {
   onAuthStateChanged,
   User as FirebaseUser
 } from 'firebase/auth';
-import { doc, getDoc, setDoc, updateDoc } from 'firebase/firestore';
+import { doc, getDoc, setDoc, updateDoc, onSnapshot } from 'firebase/firestore';
 import { auth, db, googleProvider, githubProvider } from '../config/firebase';
+
+// Store unsubscribe functions for real-time listeners
+let userUnsubscribe: (() => void) | null = null;
+let statsUnsubscribe: (() => void) | null = null;
 
 interface AuthState {
   user: User | null;
@@ -146,21 +150,23 @@ export const useAuthStore = create<AuthState>()(
         return new Promise<void>((resolve) => {
           try {
             const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
+              // Clean up previous listeners
+              if (userUnsubscribe) {
+                userUnsubscribe();
+                userUnsubscribe = null;
+              }
+              if (statsUnsubscribe) {
+                statsUnsubscribe();
+                statsUnsubscribe = null;
+              }
+
               if (firebaseUser) {
                 try {
-                  // Récupérer les données utilisateur depuis Firestore
+                  // First, do a one-time fetch to check if user exists
                   const userDoc = await getDoc(doc(db, 'users', firebaseUser.uid));
                   const statsDoc = await getDoc(doc(db, 'gameStats', firebaseUser.uid));
 
-                  if (userDoc.exists()) {
-                    set({ 
-                      user: userDoc.data() as User,
-                      gameStats: statsDoc.exists() ? statsDoc.data() as GameStats : createDefaultGameStats(firebaseUser.uid),
-                      firebaseUser,
-                      isLoading: false,
-                      isInitialized: true,
-                    });
-                  } else {
+                  if (!userDoc.exists()) {
                     // Créer un nouveau profil
                     const newUser: User = {
                       id: firebaseUser.uid,
@@ -175,15 +181,38 @@ export const useAuthStore = create<AuthState>()(
                     
                     await setDoc(doc(db, 'users', firebaseUser.uid), newUser);
                     await setDoc(doc(db, 'gameStats', firebaseUser.uid), newStats);
-                    
-                    set({ 
-                      user: newUser, 
-                      gameStats: newStats,
-                      firebaseUser,
-                      isLoading: false,
-                      isInitialized: true,
-                    });
                   }
+
+                  // Set up real-time listeners for user data
+                  userUnsubscribe = onSnapshot(doc(db, 'users', firebaseUser.uid), 
+                    (doc) => {
+                      if (doc.exists()) {
+                        console.log('[Auth] User data updated in real-time');
+                        set({ user: doc.data() as User });
+                      }
+                    },
+                    (error) => console.error('[Auth] User listener error:', error)
+                  );
+
+                  // Set up real-time listener for game stats
+                  statsUnsubscribe = onSnapshot(doc(db, 'gameStats', firebaseUser.uid),
+                    (doc) => {
+                      if (doc.exists()) {
+                        console.log('[Auth] GameStats updated in real-time');
+                        set({ gameStats: doc.data() as GameStats });
+                      }
+                    },
+                    (error) => console.error('[Auth] GameStats listener error:', error)
+                  );
+
+                  // Initial state
+                  set({ 
+                    user: userDoc.exists() ? userDoc.data() as User : null,
+                    gameStats: statsDoc.exists() ? statsDoc.data() as GameStats : createDefaultGameStats(firebaseUser.uid),
+                    firebaseUser,
+                    isLoading: false,
+                    isInitialized: true,
+                  });
                 } catch (error) {
                   console.error('Error loading user data:', error);
                   set({ isLoading: false, isInitialized: true, error: 'Failed to load user data' });
@@ -301,6 +330,22 @@ export const useAuthStore = create<AuthState>()(
       signOut: async () => {
         const { isDemo } = get();
         try {
+          // Clean up real-time listeners
+          if (userUnsubscribe) {
+            userUnsubscribe();
+            userUnsubscribe = null;
+          }
+          if (statsUnsubscribe) {
+            statsUnsubscribe();
+            statsUnsubscribe = null;
+          }
+          
+          // Also clean up task and quest listeners
+          const { useTaskStore } = await import('./taskStore');
+          const { useQuestStore } = await import('./questStore');
+          useTaskStore.getState().unsubscribeFromTasks();
+          useQuestStore.getState().unsubscribeFromQuests();
+          
           if (!isDemo) {
             await firebaseSignOut(auth);
           }

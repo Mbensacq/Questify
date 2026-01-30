@@ -11,10 +11,14 @@ import {
   updateDoc, 
   deleteDoc, 
   query, 
-  where 
+  where,
+  onSnapshot
 } from 'firebase/firestore';
 import { db } from '../config/firebase';
 import { useAuthStore } from './authStore';
+
+// Store unsubscribe function for real-time listener
+let questsUnsubscribe: (() => void) | null = null;
 
 interface QuestState {
   quests: Quest[];
@@ -28,6 +32,8 @@ interface QuestState {
   
   // Quest management
   loadQuests: (userId: string) => Promise<void>;
+  subscribeToQuests: (userId: string) => void;
+  unsubscribeFromQuests: () => void;
   generateNewQuests: (userId: string) => Promise<void>;
   forceRegenerateQuests: (userId: string) => Promise<void>;
   updateQuestProgress: (questId: string, objectiveId: string, progress: number) => Promise<void>;
@@ -103,22 +109,14 @@ export const useQuestStore = create<QuestState>()(
         const isDemo = useAuthStore.getState().isDemo;
         const today = new Date();
         today.setHours(0, 0, 0, 0);
-        const todayStr = today.toISOString().split('T')[0];
         
         // Get start of current week (Monday)
         const startOfWeek = new Date(today);
         const dayOfWeek = startOfWeek.getDay();
         const daysToMonday = dayOfWeek === 0 ? 6 : dayOfWeek - 1;
         startOfWeek.setDate(startOfWeek.getDate() - daysToMonday);
-        const weekStr = startOfWeek.toISOString().split('T')[0];
-        
-        const { lastDailyRefresh, lastWeeklyRefresh } = get();
-        const needsDailyRefresh = lastDailyRefresh !== todayStr;
-        const needsWeeklyRefresh = lastWeeklyRefresh !== weekStr;
         
         console.log('[Quests] Loading quests for user:', userId);
-        console.log('[Quests] Today:', todayStr, 'Last daily refresh:', lastDailyRefresh);
-        console.log('[Quests] Week start:', weekStr, 'Last weekly refresh:', lastWeeklyRefresh);
         
         if (isDemo) {
           // In demo mode, check if we need to generate quests
@@ -135,7 +133,6 @@ export const useQuestStore = create<QuestState>()(
           );
           
           console.log('[Quests] Has valid daily quests:', hasValidDailyQuests, 'Has valid weekly:', hasValidWeeklyQuests);
-          console.log('[Quests] Existing quests:', existingQuests.length);
           
           set({ isLoading: false });
           
@@ -147,59 +144,84 @@ export const useQuestStore = create<QuestState>()(
           return;
         }
         
+        // For Firebase, use real-time subscription
+        get().subscribeToQuests(userId);
+      },
+
+      subscribeToQuests: (userId) => {
+        const isDemo = useAuthStore.getState().isDemo;
+        if (isDemo) return;
+
+        // Unsubscribe from previous listener if any
+        if (questsUnsubscribe) {
+          questsUnsubscribe();
+        }
+
+        set({ isLoading: true });
+
         try {
           const questsRef = collection(db, 'quests');
           const q = query(questsRef, where('userId', '==', userId));
-          const snapshot = await getDocs(q);
           
-          console.log('[Quests] Firebase returned', snapshot.docs.length, 'quests');
-          
-          const quests = snapshot.docs.map(doc => {
-            const data = doc.data();
-            return {
-              ...data,
-              id: doc.id,
-              startDate: data.startDate?.toDate ? data.startDate.toDate() : new Date(data.startDate),
-              endDate: data.endDate?.toDate ? data.endDate.toDate() : new Date(data.endDate),
-              completedAt: data.completedAt?.toDate ? data.completedAt.toDate() : (data.completedAt ? new Date(data.completedAt) : undefined),
-            };
-          }) as Quest[];
-          
-          // Vérifier si on doit générer de nouvelles quêtes
-          const today = new Date();
-          today.setHours(0, 0, 0, 0);
-          
-          const hasValidDailyQuests = quests.some(q => 
-            q.type === 'daily' && 
-            new Date(q.startDate).toDateString() === today.toDateString()
+          // Real-time listener
+          questsUnsubscribe = onSnapshot(q, 
+            async (snapshot) => {
+              console.log('[Quests] Real-time update:', snapshot.docs.length, 'quests');
+              
+              const quests = snapshot.docs.map(doc => {
+                const data = doc.data();
+                return {
+                  ...data,
+                  id: doc.id,
+                  startDate: data.startDate?.toDate ? data.startDate.toDate() : new Date(data.startDate),
+                  endDate: data.endDate?.toDate ? data.endDate.toDate() : new Date(data.endDate),
+                  completedAt: data.completedAt?.toDate ? data.completedAt.toDate() : (data.completedAt ? new Date(data.completedAt) : undefined),
+                };
+              }) as Quest[];
+              
+              // Vérifier si on doit générer de nouvelles quêtes
+              const today = new Date();
+              today.setHours(0, 0, 0, 0);
+              
+              const hasValidDailyQuests = quests.some(q => 
+                q.type === 'daily' && 
+                new Date(q.startDate).toDateString() === today.toDateString()
+              );
+              
+              // Start of week (Monday)
+              const startOfWeek = new Date(today);
+              const dayOfWeek = startOfWeek.getDay();
+              const daysToMonday = dayOfWeek === 0 ? 6 : dayOfWeek - 1;
+              startOfWeek.setDate(startOfWeek.getDate() - daysToMonday);
+              
+              const hasValidWeeklyQuests = quests.some(q => 
+                q.type === 'weekly' && 
+                new Date(q.startDate) >= startOfWeek
+              );
+              
+              set({ quests, isLoading: false });
+              
+              // Générer de nouvelles quêtes si nécessaire (only if no quests exist)
+              if (quests.length === 0 || (!hasValidDailyQuests && !hasValidWeeklyQuests)) {
+                console.log('[Quests] Firebase - Generating new quests');
+                await get().generateNewQuests(userId);
+              }
+            },
+            (error) => {
+              console.error('[Quests] Real-time listener error:', error);
+              set({ isLoading: false });
+            }
           );
-          
-          // Start of week (Monday)
-          const startOfWeek = new Date(today);
-          const dayOfWeek = startOfWeek.getDay();
-          const daysToMonday = dayOfWeek === 0 ? 6 : dayOfWeek - 1;
-          startOfWeek.setDate(startOfWeek.getDate() - daysToMonday);
-          
-          const hasValidWeeklyQuests = quests.some(q => 
-            q.type === 'weekly' && 
-            new Date(q.startDate) >= startOfWeek
-          );
-          
-          console.log('[Quests] Firebase - Has valid daily:', hasValidDailyQuests, 'weekly:', hasValidWeeklyQuests);
-          
-          set({ quests, isLoading: false });
-          
-          // Générer de nouvelles quêtes si nécessaire
-          if (!hasValidDailyQuests || !hasValidWeeklyQuests) {
-            console.log('[Quests] Firebase - Generating new quests');
-            await get().generateNewQuests(userId);
-          }
         } catch (error) {
-          console.error('[Quests] Error loading quests from Firebase:', error);
-          // En cas d'erreur Firebase, essayer de générer des quêtes quand même
-          console.log('[Quests] Falling back to local quest generation');
+          console.error('[Quests] Error setting up quests listener:', error);
           set({ isLoading: false });
-          await get().generateNewQuests(userId);
+        }
+      },
+
+      unsubscribeFromQuests: () => {
+        if (questsUnsubscribe) {
+          questsUnsubscribe();
+          questsUnsubscribe = null;
         }
       },
 
