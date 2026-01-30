@@ -86,6 +86,11 @@ interface TaskState {
   importData: (data: { tasks: Task[]; categories: Category[] }) => void;
   clearAllData: () => void;
   
+  // Bulk delete
+  bulkDeleteTasks: (taskIds: string[]) => Promise<number>;
+  deleteTasksByDateRange: (startDate: Date, endDate: Date) => Promise<number>;
+  getTasksCountByDateRange: (startDate: Date, endDate: Date) => number;
+  
   // Subtask management
   updateSubTask: (taskId: string, subtaskId: string, updates: { completed?: boolean; title?: string }) => void;
   
@@ -746,6 +751,66 @@ export const useTaskStore = create<TaskState>()(
             createdAt: new Date().toISOString(),
           }))
         });
+      },
+
+      bulkDeleteTasks: async (taskIds: string[]) => {
+        const isDemo = useAuthStore.getState().isDemo;
+        let deletedCount = 0;
+
+        if (!isDemo) {
+          try {
+            const batch = writeBatch(db);
+            taskIds.forEach(id => {
+              batch.delete(doc(db, 'tasks', id));
+            });
+            await batch.commit();
+            deletedCount = taskIds.length;
+            // onSnapshot will handle local state update
+          } catch (e) {
+            console.warn('Firebase bulk delete failed:', e);
+          }
+        } else {
+          set(state => ({
+            tasks: state.tasks.filter(task => !taskIds.includes(task.id)),
+            selectedTask: taskIds.includes(state.selectedTask?.id || '') ? null : state.selectedTask
+          }));
+          deletedCount = taskIds.length;
+        }
+
+        return deletedCount;
+      },
+
+      deleteTasksByDateRange: async (startDate: Date, endDate: Date) => {
+        const tasks = get().tasks;
+        const tasksToDelete = tasks.filter(task => {
+          if (!task.dueDate) return false;
+          const taskDate = new Date(task.dueDate);
+          taskDate.setHours(0, 0, 0, 0);
+          const start = new Date(startDate);
+          start.setHours(0, 0, 0, 0);
+          const end = new Date(endDate);
+          end.setHours(23, 59, 59, 999);
+          return taskDate >= start && taskDate <= end;
+        });
+
+        if (tasksToDelete.length === 0) return 0;
+
+        const taskIds = tasksToDelete.map(t => t.id);
+        return await get().bulkDeleteTasks(taskIds);
+      },
+
+      getTasksCountByDateRange: (startDate: Date, endDate: Date) => {
+        const tasks = get().tasks;
+        return tasks.filter(task => {
+          if (!task.dueDate) return false;
+          const taskDate = new Date(task.dueDate);
+          taskDate.setHours(0, 0, 0, 0);
+          const start = new Date(startDate);
+          start.setHours(0, 0, 0, 0);
+          const end = new Date(endDate);
+          end.setHours(23, 59, 59, 999);
+          return taskDate >= start && taskDate <= end;
+        }).length;
       },
     }),
     {

@@ -6,11 +6,13 @@ import {
   Plus,
   Search,
   FolderOpen,
-  CheckCircle2
+  CheckCircle2,
+  Trash2
 } from 'lucide-react';
 import { useTaskStore } from '../stores/taskStore';
 import { useUIStore } from '../stores/uiStore';
 import { TaskCard } from '../components/tasks/TaskCard';
+import { BulkDeleteModal } from '../components/tasks/BulkDeleteModal';
 import { Button } from '../components/ui/Button';
 import { Input } from '../components/ui/Input';
 import { cn } from '../utils/helpers';
@@ -24,6 +26,7 @@ export const TasksPage: React.FC = () => {
   const [groupBy, setGroupBy] = useState<GroupBy>('none');
   const [searchQuery, setSearchQuery] = useState('');
   const [showFilters, setShowFilters] = useState(false);
+  const [showBulkDelete, setShowBulkDelete] = useState(false);
 
   // Filter and search tasks
   const filteredTasks = useMemo(() => {
@@ -150,10 +153,20 @@ export const TasksPage: React.FC = () => {
           </p>
         </div>
 
-        <Button variant="game" onClick={openTaskModal} className="w-full sm:w-auto">
-          <Plus className="w-5 h-5 mr-1" />
-          Nouvelle tâche
-        </Button>
+        <div className="flex gap-2">
+          <Button variant="game" onClick={openTaskModal} className="flex-1 sm:flex-none">
+            <Plus className="w-5 h-5 mr-1" />
+            Nouvelle tâche
+          </Button>
+          <Button 
+            variant="danger" 
+            onClick={() => setShowBulkDelete(true)} 
+            className="px-3"
+            title="Suppression en masse"
+          >
+            <Trash2 className="w-5 h-5" />
+          </Button>
+        </div>
       </div>
 
       {/* Search and Filters */}
@@ -309,6 +322,12 @@ export const TasksPage: React.FC = () => {
           </Button>
         </motion.div>
       )}
+
+      {/* Bulk Delete Modal */}
+      <BulkDeleteModal 
+        isOpen={showBulkDelete} 
+        onClose={() => setShowBulkDelete(false)} 
+      />
     </div>
   );
-};;
+};
