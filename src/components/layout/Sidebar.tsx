@@ -13,7 +13,8 @@ import {
   X,
   Sparkles,
   User,
-  ChevronLeft
+  ChevronLeft,
+  Calendar
 } from 'lucide-react';
 import { useAuthStore } from '../../stores/authStore';
 import { useUIStore } from '../../stores/uiStore';
@@ -25,6 +26,7 @@ import { cn } from '../../utils/helpers';
 const navItems = [
   { path: '/', icon: Home, label: 'Accueil' },
   { path: '/tasks', icon: ListTodo, label: 'Tâches' },
+  { path: '/calendar', icon: Calendar, label: 'Calendrier' },
   { path: '/quests', icon: Scroll, label: 'Quêtes' },
   { path: '/achievements', icon: Trophy, label: 'Achievements' },
   { path: '/stats', icon: BarChart3, label: 'Statistiques' },

@@ -9,6 +9,7 @@ import { AuthForm } from './components/auth/AuthForm';
 import { Layout } from './components/layout/Layout';
 import { Dashboard } from './pages/Dashboard';
 import { TasksPage } from './pages/TasksPage';
+import { CalendarPage } from './pages/CalendarPage';
 import { QuestsPage } from './pages/QuestsPage';
 import { AchievementsPage } from './pages/AchievementsPage';
 import { StatsPage } from './pages/StatsPage';
@@ -178,6 +179,7 @@ function App() {
         >
           <Route path="/" element={<Dashboard />} />
           <Route path="/tasks" element={<TasksPage />} />
+          <Route path="/calendar" element={<CalendarPage />} />
           <Route path="/quests" element={<QuestsPage />} />
           <Route path="/achievements" element={<AchievementsPage />} />
           <Route path="/stats" element={<StatsPage />} />
