@@ -28,8 +28,9 @@ import { Line, Bar, Doughnut } from 'react-chartjs-2';
 import { useAuthStore } from '../stores/authStore';
 import { useTaskStore } from '../stores/taskStore';
 import { Card, StatCard } from '../components/ui/Card';
+import { PageTransition, staggerContainer, staggerItem } from '../components/ui/PageTransition';
 import { cn, formatNumber } from '../utils/helpers';
-import { format, subDays, startOfWeek, eachDayOfInterval, isToday, isSameDay } from 'date-fns';
+import { format, subDays, eachDayOfInterval, isSameDay } from 'date-fns';
 import { fr } from 'date-fns/locale';
 
 // Register Chart.js components
@@ -159,7 +160,7 @@ export const StatsPage: React.FC = () => {
   };
 
   return (
-    <div className="space-y-6">
+    <PageTransition className="space-y-6">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
@@ -196,32 +197,45 @@ export const StatsPage: React.FC = () => {
       </div>
 
       {/* Overview Stats */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        <StatCard
-          icon={<CheckCircle2 className="w-6 h-6" />}
-          label="Total complétées"
-          value={formatNumber(totalCompleted)}
-          color="primary"
-        />
-        <StatCard
-          icon={<Target className="w-6 h-6" />}
-          label="Taux de complétion"
-          value={`${completionRate}%`}
-          color="green"
-        />
-        <StatCard
-          icon={<TrendingUp className="w-6 h-6" />}
-          label="Moyenne par jour"
-          value={avgTasksPerDay}
-          color="purple"
-        />
-        <StatCard
-          icon={<Flame className="w-6 h-6" />}
-          label="Plus long streak"
-          value={`${gameStats.longestStreak} jours`}
-          color="orange"
-        />
-      </div>
+      <motion.div 
+        className="grid grid-cols-2 lg:grid-cols-4 gap-4"
+        variants={staggerContainer}
+        initial="hidden"
+        animate="visible"
+      >
+        <motion.div variants={staggerItem}>
+          <StatCard
+            icon={<CheckCircle2 className="w-6 h-6" />}
+            label="Total complétées"
+            value={formatNumber(totalCompleted)}
+            color="primary"
+          />
+        </motion.div>
+        <motion.div variants={staggerItem}>
+          <StatCard
+            icon={<Target className="w-6 h-6" />}
+            label="Taux de complétion"
+            value={`${completionRate}%`}
+            color="green"
+          />
+        </motion.div>
+        <motion.div variants={staggerItem}>
+          <StatCard
+            icon={<TrendingUp className="w-6 h-6" />}
+            label="Moyenne par jour"
+            value={avgTasksPerDay}
+            color="purple"
+          />
+        </motion.div>
+        <motion.div variants={staggerItem}>
+          <StatCard
+            icon={<Flame className="w-6 h-6" />}
+            label="Plus long streak"
+            value={`${gameStats.longestStreak} jours`}
+            color="orange"
+          />
+        </motion.div>
+      </motion.div>
 
       {/* Charts Grid */}
       <div className="grid lg:grid-cols-2 gap-6">
@@ -346,6 +360,6 @@ export const StatsPage: React.FC = () => {
           </div>
         </div>
       </Card>
-    </div>
+    </PageTransition>
   );
 };

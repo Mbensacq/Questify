@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 import { motion } from 'framer-motion';
 import {
   Sparkles,
@@ -13,6 +13,7 @@ import {
   CalendarOff,
   ListTodo
 } from 'lucide-react';
+import { PageTransition, staggerContainer, staggerItem } from '../components/ui/PageTransition';
 import { useAuthStore } from '../stores/authStore';
 import { useTaskStore } from '../stores/taskStore';
 import { useQuestStore } from '../stores/questStore';
@@ -21,13 +22,12 @@ import { Card, StatCard } from '../components/ui/Card';
 import { Button } from '../components/ui/Button';
 import { Avatar } from '../components/ui/Avatar';
 import { XPBar } from '../components/ui/ProgressBar';
-import { StreakBadge } from '../components/ui/Badge';
 import { TaskCard } from '../components/tasks/TaskCard';
 import { QuestCard } from '../components/quests/QuestCard';
-import { PlayerStats, WeeklyProgress } from '../components/game/PlayerStats';
+import { WeeklyProgress } from '../components/game/PlayerStats';
 import { formatNumber, getLevelTitle } from '../utils/helpers';
 import { Link } from 'react-router-dom';
-import { format, isToday, isTomorrow, isPast, startOfDay } from 'date-fns';
+import { format, isToday, isTomorrow, isPast } from 'date-fns';
 import { fr } from 'date-fns/locale';
 
 export const Dashboard: React.FC = () => {
@@ -81,7 +81,7 @@ export const Dashboard: React.FC = () => {
   const pendingTasks = tasks.filter((t) => t.status === 'pending').length;
 
   return (
-    <div className="space-y-4 sm:space-y-6 w-full overflow-x-hidden px-1 sm:px-0">
+    <PageTransition className="space-y-4 sm:space-y-6 w-full overflow-x-hidden px-1 sm:px-0">
       {/* Welcome Header */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
@@ -121,32 +121,45 @@ export const Dashboard: React.FC = () => {
       </motion.div>
 
       {/* Quick Stats */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-4">
-        <StatCard
-          icon={<CheckCircle2 className="w-4 h-4 sm:w-6 sm:h-6" />}
-          label="Complétées"
-          value={completedToday}
-          color="primary"
-        />
-        <StatCard
-          icon={<Target className="w-4 h-4 sm:w-6 sm:h-6" />}
-          label="En attente"
-          value={pendingTasks}
-          color="yellow"
-        />
-        <StatCard
-          icon={<Flame className="w-4 h-4 sm:w-6 sm:h-6" />}
-          label="Streak"
-          value={`${gameStats.currentStreak}j`}
-          color="orange"
-        />
-        <StatCard
-          icon={<Trophy className="w-4 h-4 sm:w-6 sm:h-6" />}
-          label="XP Total"
-          value={formatNumber(gameStats.totalXP)}
-          color="purple"
-        />
-      </div>
+      <motion.div 
+        className="grid grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-4"
+        variants={staggerContainer}
+        initial="hidden"
+        animate="visible"
+      >
+        <motion.div variants={staggerItem}>
+          <StatCard
+            icon={<CheckCircle2 className="w-4 h-4 sm:w-6 sm:h-6" />}
+            label="Complétées"
+            value={completedToday}
+            color="primary"
+          />
+        </motion.div>
+        <motion.div variants={staggerItem}>
+          <StatCard
+            icon={<Target className="w-4 h-4 sm:w-6 sm:h-6" />}
+            label="En attente"
+            value={pendingTasks}
+            color="yellow"
+          />
+        </motion.div>
+        <motion.div variants={staggerItem}>
+          <StatCard
+            icon={<Flame className="w-4 h-4 sm:w-6 sm:h-6" />}
+            label="Streak"
+            value={`${gameStats.currentStreak}j`}
+            color="orange"
+          />
+        </motion.div>
+        <motion.div variants={staggerItem}>
+          <StatCard
+            icon={<Trophy className="w-4 h-4 sm:w-6 sm:h-6" />}
+            label="XP Total"
+            value={formatNumber(gameStats.totalXP)}
+            color="purple"
+          />
+        </motion.div>
+      </motion.div>
 
       {/* Main Content Grid */}
       <div className="grid lg:grid-cols-3 gap-4 sm:gap-6">
@@ -345,6 +358,6 @@ export const Dashboard: React.FC = () => {
           </Card>
         </div>
       </div>
-    </div>
+    </PageTransition>
   );
 };

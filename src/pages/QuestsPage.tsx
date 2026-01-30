@@ -12,6 +12,7 @@ import { useQuestStore } from '../stores/questStore';
 import { useAuthStore } from '../stores/authStore';
 import { QuestCard } from '../components/quests/QuestCard';
 import { Card, StatCard } from '../components/ui/Card';
+import { PageTransition, staggerContainer, staggerItem } from '../components/ui/PageTransition';
 import { cn, formatNumber } from '../utils/helpers';
 import { differenceInHours, differenceInMinutes } from 'date-fns';
 import { Quest } from '../types';
@@ -51,7 +52,7 @@ export const QuestsPage: React.FC = () => {
   const daysUntilWeeklyReset = Math.ceil((nextMonday.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
 
   return (
-    <div className="space-y-4 sm:space-y-6 px-1 sm:px-0">
+    <PageTransition className="space-y-4 sm:space-y-6 px-1 sm:px-0">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
@@ -66,32 +67,45 @@ export const QuestsPage: React.FC = () => {
       </div>
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-4">
-        <StatCard
-          icon={<Target className="w-4 h-4 sm:w-6 sm:h-6" />}
-          label="Quotidiennes"
-          value={`${completedDaily}/${dailyQuests.length}`}
-          color="primary"
-        />
-        <StatCard
-          icon={<Sparkles className="w-4 h-4 sm:w-6 sm:h-6" />}
-          label="Hebdomadaires"
-          value={`${completedWeekly}/${weeklyQuests.length}`}
-          color="purple"
-        />
-        <StatCard
-          icon={<Gift className="w-4 h-4 sm:w-6 sm:h-6" />}
-          label="À réclamer"
-          value={claimableDaily + claimableWeekly}
-          color="yellow"
-        />
-        <StatCard
-          icon={<CheckCircle2 className="w-4 h-4 sm:w-6 sm:h-6" />}
-          label="Complétées"
-          value={formatNumber(gameStats.questsCompleted || 0)}
-          color="green"
-        />
-      </div>
+      <motion.div 
+        className="grid grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-4"
+        variants={staggerContainer}
+        initial="hidden"
+        animate="visible"
+      >
+        <motion.div variants={staggerItem}>
+          <StatCard
+            icon={<Target className="w-4 h-4 sm:w-6 sm:h-6" />}
+            label="Quotidiennes"
+            value={`${completedDaily}/${dailyQuests.length}`}
+            color="primary"
+          />
+        </motion.div>
+        <motion.div variants={staggerItem}>
+          <StatCard
+            icon={<Sparkles className="w-4 h-4 sm:w-6 sm:h-6" />}
+            label="Hebdomadaires"
+            value={`${completedWeekly}/${weeklyQuests.length}`}
+            color="purple"
+          />
+        </motion.div>
+        <motion.div variants={staggerItem}>
+          <StatCard
+            icon={<Gift className="w-4 h-4 sm:w-6 sm:h-6" />}
+            label="À réclamer"
+            value={claimableDaily + claimableWeekly}
+            color="yellow"
+          />
+        </motion.div>
+        <motion.div variants={staggerItem}>
+          <StatCard
+            icon={<CheckCircle2 className="w-4 h-4 sm:w-6 sm:h-6" />}
+            label="Complétées"
+            value={formatNumber(gameStats.questsCompleted || 0)}
+            color="green"
+          />
+        </motion.div>
+      </motion.div>
 
       {/* Reset Timer */}
       <Card className="p-3 sm:p-4 bg-gradient-to-r from-primary-500/10 to-cyan-500/10">
@@ -193,6 +207,6 @@ export const QuestsPage: React.FC = () => {
           </div>
         </div>
       </Card>
-    </div>
+    </PageTransition>
   );
 };

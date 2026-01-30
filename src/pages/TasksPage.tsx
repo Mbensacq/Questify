@@ -21,8 +21,8 @@ import { Task } from '../types';
 type GroupBy = 'none' | 'category' | 'priority' | 'dueDate';
 
 export const TasksPage: React.FC = () => {
-  const { tasks, categories, filter, setFilter, updateTask, deleteTask } = useTaskStore();
-  const { openTaskModal, setEditingTask } = useUIStore();
+  const { tasks, categories, filter, setFilter } = useTaskStore();
+  const { openTaskModal } = useUIStore();
   const [groupBy, setGroupBy] = useState<GroupBy>('none');
   const [searchQuery, setSearchQuery] = useState('');
   const [showFilters, setShowFilters] = useState(false);
@@ -134,9 +134,18 @@ export const TasksPage: React.FC = () => {
     return groups;
   }, [filteredTasks, groupBy, categories]);
 
-  const handleEditTask = (task: Task) => {
-    setEditingTask(task);
-    openTaskModal();
+  // Animation variants for staggered list
+  const containerVariants = {
+    hidden: { opacity: 0 },
+    visible: {
+      opacity: 1,
+      transition: { staggerChildren: 0.05 }
+    }
+  };
+
+  const itemVariants = {
+    hidden: { opacity: 0, y: 20 },
+    visible: { opacity: 1, y: 0 }
   };
 
   return (
@@ -278,9 +287,14 @@ export const TasksPage: React.FC = () => {
 
       {/* Tasks List */}
       {filteredTasks.length > 0 ? (
-        <div className="space-y-4 sm:space-y-6">
+        <motion.div 
+          className="space-y-4 sm:space-y-6"
+          variants={containerVariants}
+          initial="hidden"
+          animate="visible"
+        >
           {Object.entries(groupedTasks).map(([group, tasks]) => (
-            <div key={group}>
+            <motion.div key={group} variants={itemVariants}>
               {groupBy !== 'none' && (
                 <h3 className="font-medium text-gray-600 dark:text-gray-400 mb-2 sm:mb-3 flex items-center gap-2 text-sm sm:text-base">
                   <FolderOpen className="w-4 h-4" />
@@ -291,16 +305,20 @@ export const TasksPage: React.FC = () => {
                 </h3>
               )}
               <div className="space-y-2 sm:space-y-3">
-                {tasks.map((task) => (
-                  <TaskCard
+                {tasks.map((task, index) => (
+                  <motion.div
                     key={task.id}
-                    task={task}
-                  />
+                    initial={{ opacity: 0, x: -20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: index * 0.03 }}
+                  >
+                    <TaskCard task={task} />
+                  </motion.div>
                 ))}
               </div>
-            </div>
+            </motion.div>
           ))}
-        </div>
+        </motion.div>
       ) : (
         <motion.div
           initial={{ opacity: 0 }}

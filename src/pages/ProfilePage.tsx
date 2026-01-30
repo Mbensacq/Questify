@@ -17,14 +17,14 @@ import { useTaskStore } from '../stores/taskStore';
 import { Card, StatCard } from '../components/ui/Card';
 import { Avatar, AvatarSelector } from '../components/ui/Avatar';
 import { Button } from '../components/ui/Button';
-import { Input, Textarea } from '../components/ui/Input';
+import { Input } from '../components/ui/Input';
 import { XPBar } from '../components/ui/ProgressBar';
 import { Modal } from '../components/ui/Modal';
+import { PageTransition } from '../components/ui/PageTransition';
 import { ACHIEVEMENTS } from '../config/achievements';
 import { formatNumber, getLevelTitle } from '../utils/helpers';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
-import { AvatarConfig } from '../types';
 
 export const ProfilePage: React.FC = () => {
   const { user, gameStats, updateProfile, updateAvatar } = useAuthStore();
@@ -61,7 +61,7 @@ export const ProfilePage: React.FC = () => {
   const recentAchievements = unlockedAchievements.slice(-4).reverse();
 
   return (
-    <div className="space-y-6">
+    <PageTransition className="space-y-6">
       {/* Profile Header */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
@@ -282,6 +282,6 @@ export const ProfilePage: React.FC = () => {
           onSelect={handleAvatarSelect}
         />
       </Modal>
-    </div>
+    </PageTransition>
   );
 };

@@ -16,6 +16,7 @@ import { useTaskStore } from '../stores/taskStore';
 import { useAuthStore } from '../stores/authStore';
 import { Card } from '../components/ui/Card';
 import { Button } from '../components/ui/Button';
+import { PageTransition } from '../components/ui/PageTransition';
 import { cn } from '../utils/helpers';
 import { Task, TaskPriority } from '../types';
 import { format, startOfMonth, endOfMonth, startOfWeek, endOfWeek, addDays, isSameMonth, isSameDay, addMonths, subMonths, isToday } from 'date-fns';
@@ -243,7 +244,7 @@ export const CalendarPage: React.FC = () => {
   const weekDays = ['Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam', 'Dim'];
 
   return (
-    <div className="space-y-4 sm:space-y-6 px-1 sm:px-0">
+    <PageTransition className="space-y-4 sm:space-y-6 px-1 sm:px-0">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
@@ -435,6 +436,6 @@ export const CalendarPage: React.FC = () => {
           defaultDate={quickTaskDate}
         />
       )}
-    </div>
+    </PageTransition>
   );
 };

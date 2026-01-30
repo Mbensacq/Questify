@@ -27,6 +27,7 @@ import { useUIStore } from '../stores/uiStore';
 import { Card } from '../components/ui/Card';
 import { Button } from '../components/ui/Button';
 import { Modal } from '../components/ui/Modal';
+import { PageTransition } from '../components/ui/PageTransition';
 import toast from 'react-hot-toast';
 
 // Accent colors available
@@ -155,7 +156,7 @@ export const SettingsPage: React.FC = () => {
   };
 
   return (
-    <div className="max-w-2xl mx-auto space-y-6 pb-8">
+    <PageTransition className="max-w-2xl mx-auto space-y-6 pb-8">
       {/* Header */}
       <div className="flex items-center gap-3 mb-8">
         <div 
@@ -570,6 +571,6 @@ export const SettingsPage: React.FC = () => {
           </Button>
         </div>
       </Modal>
-    </div>
+    </PageTransition>
   );
 };

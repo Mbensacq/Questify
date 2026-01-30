@@ -2,15 +2,10 @@ import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import {
   Trophy,
-  Lock,
   Sparkles,
-  Filter,
   Search,
-  Star,
   Zap,
-  Flame,
   Target,
-  Clock,
   Crown
 } from 'lucide-react';
 import { useAuthStore } from '../stores/authStore';
@@ -19,6 +14,7 @@ import { Card, StatCard } from '../components/ui/Card';
 import { AchievementCard } from '../components/achievements/AchievementCard';
 import { Input } from '../components/ui/Input';
 import { ProgressBar } from '../components/ui/ProgressBar';
+import { PageTransition } from '../components/ui/PageTransition';
 import { cn, formatNumber } from '../utils/helpers';
 
 export const AchievementsPage: React.FC = () => {
@@ -77,7 +73,7 @@ export const AchievementsPage: React.FC = () => {
   };
 
   return (
-    <div className="space-y-6">
+    <PageTransition className="space-y-6">
       {/* Header */}
       <div>
         <h1 className="text-2xl font-bold flex items-center gap-2">
@@ -234,6 +230,6 @@ export const AchievementsPage: React.FC = () => {
           <p className="text-gray-500">Aucun achievement trouvé</p>
         </div>
       )}
-    </div>
+    </PageTransition>
   );
 };
