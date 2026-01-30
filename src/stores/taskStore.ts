@@ -94,6 +94,9 @@ interface TaskState {
   // Subtask management
   updateSubTask: (taskId: string, subtaskId: string, updates: { completed?: boolean; title?: string }) => void;
   
+  // Perfect day check
+  checkPerfectDay: () => Promise<void>;
+  
   // Filter alias
   filter: TaskFilter;
   setFilter: (filter: Partial<TaskFilter>) => void;
@@ -346,22 +349,75 @@ export const useTaskStore = create<TaskState>()(
           await authStore.incrementStat('weeklyTasksCompleted');
           await authStore.updateStreak();
 
-          // Vérifier les achievements liés aux tâches
-          const { ACHIEVEMENTS } = await import('../config/achievements');
-          const gameStats = useAuthStore.getState().gameStats;
+          // Track difficulty-based achievements
+          if (task.difficulty === 'epic') {
+            await authStore.incrementStat('epicTasksCompleted');
+          } else if (task.difficulty === 'legendary') {
+            await authStore.incrementStat('legendaryTasksCompleted');
+          }
+          if (task.difficulty === 'hard' || task.difficulty === 'epic' || task.difficulty === 'legendary') {
+            await authStore.incrementStat('hardTasksCompleted');
+          }
           
-          if (gameStats) {
-            const tasksCompleted = gameStats.tasksCompleted;
-            
-            // Vérifier chaque achievement de type tasks_completed
-            for (const achievement of ACHIEVEMENTS) {
-              if (achievement.requirement.type === 'tasks_completed' &&
-                  tasksCompleted >= achievement.requirement.value &&
-                  !gameStats.achievementsUnlocked.includes(achievement.id)) {
-                await authStore.unlockAchievement(achievement.id);
-              }
+          // Track priority-based achievements
+          if (task.priority === 'high' || task.priority === 'critical') {
+            await authStore.incrementStat('highPriorityTasksCompleted');
+          }
+
+          // Track time-based achievements
+          const hour = completedAt.getHours();
+          const dayOfWeek = completedAt.getDay();
+          
+          if (hour < 7) {
+            await authStore.incrementStat('earlyCompletions');
+          }
+          if (hour >= 0 && hour < 5) {
+            await authStore.incrementStat('lateCompletions');
+          }
+          if (dayOfWeek === 0 || dayOfWeek === 6) {
+            await authStore.incrementStat('weekendTasks');
+          }
+
+          // Track perfect tasks (tasks with all subtasks completed)
+          if (task.subtasks && task.subtasks.length > 0) {
+            const allSubtasksCompleted = task.subtasks.every(st => st.completed);
+            if (allSubtasksCompleted) {
+              await authStore.incrementStat('perfectTasksCompleted');
             }
           }
+
+          // Update category stats
+          if (task.category) {
+            const gameStats = useAuthStore.getState().gameStats;
+            if (gameStats) {
+              const categoryStats = { ...gameStats.categoryStats };
+              if (!categoryStats[task.category]) {
+                categoryStats[task.category] = { tasksCompleted: 0, totalXP: 0, averageTime: 0 };
+              }
+              categoryStats[task.category].tasksCompleted += 1;
+              categoryStats[task.category].totalXP += task.xpReward;
+              
+              const isDemo = useAuthStore.getState().isDemo;
+              const user = useAuthStore.getState().user;
+              if (!isDemo && user) {
+                try {
+                  await updateDoc(doc(db, 'gameStats', user.id), { categoryStats });
+                } catch (e) {
+                  console.warn('Failed to update category stats:', e);
+                }
+              }
+              // Update local state
+              useAuthStore.setState({ 
+                gameStats: { ...gameStats, categoryStats } 
+              });
+            }
+          }
+
+          // Check for perfect day achievement
+          await get().checkPerfectDay();
+
+          // Check all achievements after stats update
+          await authStore.checkAllAchievements();
 
           // Mettre à jour les quêtes
           const { useQuestStore } = await import('./questStore');
@@ -443,6 +499,11 @@ export const useTaskStore = create<TaskState>()(
 
         const subtasks = [...task.subtasks, newSubtask];
         await get().updateTask(taskId, { subtasks });
+        
+        // Track subtask creation for achievements
+        const authStore = useAuthStore.getState();
+        await authStore.incrementStat('subtasksCreated');
+        await authStore.checkAllAchievements();
       },
 
       toggleSubtask: async (taskId, subtaskId) => {
@@ -811,6 +872,45 @@ export const useTaskStore = create<TaskState>()(
           end.setHours(23, 59, 59, 999);
           return taskDate >= start && taskDate <= end;
         }).length;
+      },
+
+      // Check if all tasks for today are completed (perfect day)
+      checkPerfectDay: async () => {
+        const tasks = get().tasks;
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        const endOfDay = new Date(today);
+        endOfDay.setHours(23, 59, 59, 999);
+
+        // Get all tasks due today
+        const todayTasks = tasks.filter(task => {
+          if (!task.dueDate) return false;
+          const taskDate = new Date(task.dueDate);
+          return taskDate >= today && taskDate <= endOfDay;
+        });
+
+        // Need at least 3 tasks for a perfect day
+        if (todayTasks.length < 3) return;
+
+        // Check if all are completed
+        const allCompleted = todayTasks.every(task => task.status === 'completed');
+        
+        if (allCompleted) {
+          const authStore = useAuthStore.getState();
+          const gameStats = authStore.gameStats;
+          
+          // Check if we already counted this perfect day
+          const lastPerfectDate = localStorage.getItem('lastPerfectDay');
+          const todayStr = today.toISOString().split('T')[0];
+          
+          if (lastPerfectDate !== todayStr) {
+            await authStore.incrementStat('perfectDays');
+            localStorage.setItem('lastPerfectDay', todayStr);
+            
+            // Check achievements after updating
+            await authStore.checkAllAchievements();
+          }
+        }
       },
     }),
     {

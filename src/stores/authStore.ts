@@ -59,6 +59,8 @@ interface AuthState {
   spendCoins: (amount: number) => Promise<boolean>;
   spendGems: (amount: number) => Promise<boolean>;
   unlockAchievement: (achievementId: string) => Promise<void>;
+  checkAllAchievements: () => Promise<void>;
+  checkLoginAchievements: () => Promise<void>;
   
   // Helpers
   calculateXPForLevel: (level: number) => number;
@@ -122,6 +124,20 @@ const createDefaultGameStats = (userId: string): GameStats => ({
   weeklyTasksCompleted: 0,
   lastDailyReset: new Date().toISOString(),
   lastWeeklyReset: new Date().toISOString(),
+  // New fields for achievements
+  epicTasksCompleted: 0,
+  legendaryTasksCompleted: 0,
+  hardTasksCompleted: 0,
+  highPriorityTasksCompleted: 0,
+  earlyCompletions: 0,
+  lateCompletions: 0,
+  perfectDays: 0,
+  weekendTasks: 0,
+  dailyQuestsCompleted: 0,
+  perfectTasksCompleted: 0,
+  subtasksCreated: 0,
+  streakRecoveries: 0,
+  lastLoginDate: new Date().toISOString(),
 });
 
 export const useAuthStore = create<AuthState>()(
@@ -270,6 +286,11 @@ export const useAuthStore = create<AuthState>()(
           await setDoc(doc(db, 'gameStats', result.user.uid), newStats);
           
           set({ user: newUser, gameStats: newStats, firebaseUser: result.user });
+          
+          // Check for founder achievement
+          setTimeout(async () => {
+            await get().checkAllAchievements();
+          }, 500);
         } catch (error: unknown) {
           const errorMessage = error instanceof Error ? error.message : 'Sign up failed';
           set({ error: errorMessage, isLoading: false });
@@ -325,6 +346,11 @@ export const useAuthStore = create<AuthState>()(
           isInitialized: true,
           isDemo: true,
         });
+        
+        // Check for founder achievement after demo sign in
+        setTimeout(async () => {
+          await get().checkAllAchievements();
+        }, 500);
       },
 
       signOut: async () => {
@@ -514,6 +540,7 @@ export const useAuthStore = create<AuthState>()(
         const lastCompleted = gameStats.lastCompletedDate;
 
         let newStreak = gameStats.currentStreak;
+        let streakWasLost = false;
         
         if (!lastCompleted) {
           newStreak = 1;
@@ -527,7 +554,11 @@ export const useAuthStore = create<AuthState>()(
           } else if (diffDays === 1) {
             newStreak += 1;
           } else {
-            newStreak = 1; // Streak cassé
+            // Streak cassé - track for recovery achievement
+            if (gameStats.currentStreak > 0) {
+              streakWasLost = true;
+            }
+            newStreak = 1;
           }
         }
 
@@ -554,6 +585,12 @@ export const useAuthStore = create<AuthState>()(
               await get().unlockAchievement(achievement.id);
             }
           }
+        }
+
+        // Track streak recovery if streak was lost and now starting again
+        if (streakWasLost) {
+          await get().incrementStat('streakRecoveries');
+          await get().checkAllAchievements();
         }
 
         // Mettre à jour les quêtes liées au streak
@@ -644,6 +681,148 @@ export const useAuthStore = create<AuthState>()(
           } : {}),
         };
         
+        if (!isDemo) {
+          await updateDoc(doc(db, 'gameStats', user.id), updates);
+        }
+        set({ gameStats: { ...gameStats, ...updates } });
+      },
+
+      // Comprehensive achievement checking function
+      checkAllAchievements: async () => {
+        const { gameStats, user } = get();
+        if (!gameStats || !user) return;
+
+        const { ACHIEVEMENTS } = await import('../config/achievements');
+        const unlockedIds = gameStats.achievementsUnlocked;
+
+        // Get max category tasks
+        const maxCategoryTasks = Object.values(gameStats.categoryStats || {}).reduce(
+          (max, cat) => Math.max(max, cat?.tasksCompleted || 0), 0
+        );
+
+        // Check if all categories have minimum tasks
+        const categories = ['work', 'personal', 'health', 'learning', 'finance', 'social', 'other'];
+        const allCategoriesMin = (minValue: number): boolean => {
+          return categories.every(cat => {
+            const catStats = gameStats.categoryStats?.[cat];
+            return (catStats?.tasksCompleted || 0) >= minValue;
+          });
+        };
+
+        for (const achievement of ACHIEVEMENTS) {
+          if (unlockedIds.includes(achievement.id)) continue;
+
+          let shouldUnlock = false;
+          const { type, value } = achievement.requirement;
+
+          switch (type) {
+            case 'tasks_completed':
+              shouldUnlock = gameStats.tasksCompleted >= value;
+              break;
+            case 'streak':
+              shouldUnlock = gameStats.currentStreak >= value;
+              break;
+            case 'level':
+              shouldUnlock = gameStats.level >= value;
+              break;
+            case 'total_xp':
+              shouldUnlock = gameStats.totalXP >= value;
+              break;
+            case 'daily_xp':
+              shouldUnlock = gameStats.dailyXP >= value;
+              break;
+            case 'daily_tasks':
+              shouldUnlock = gameStats.dailyTasksCompleted >= value;
+              break;
+            case 'achievements':
+              shouldUnlock = gameStats.achievementsUnlocked.length >= value;
+              break;
+            case 'quests_completed':
+              shouldUnlock = (gameStats.questsCompleted || 0) >= value;
+              break;
+            case 'daily_quests':
+              shouldUnlock = (gameStats.dailyQuestsCompleted || 0) >= value;
+              break;
+            case 'epic_tasks':
+              shouldUnlock = (gameStats.epicTasksCompleted || 0) >= value;
+              break;
+            case 'legendary_tasks':
+              shouldUnlock = (gameStats.legendaryTasksCompleted || 0) >= value;
+              break;
+            case 'hard_tasks':
+              shouldUnlock = (gameStats.hardTasksCompleted || 0) >= value;
+              break;
+            case 'high_priority_tasks':
+              shouldUnlock = (gameStats.highPriorityTasksCompleted || 0) >= value;
+              break;
+            case 'early_completion':
+              shouldUnlock = (gameStats.earlyCompletions || 0) >= value;
+              break;
+            case 'late_completion':
+              shouldUnlock = (gameStats.lateCompletions || 0) >= value;
+              break;
+            case 'perfect_day':
+              shouldUnlock = (gameStats.perfectDays || 0) >= value;
+              break;
+            case 'weekend_tasks':
+              shouldUnlock = (gameStats.weekendTasks || 0) >= value;
+              break;
+            case 'category_tasks':
+              shouldUnlock = maxCategoryTasks >= value;
+              break;
+            case 'all_categories':
+              shouldUnlock = allCategoriesMin(value);
+              break;
+            case 'perfect_tasks':
+              shouldUnlock = (gameStats.perfectTasksCompleted || 0) >= value;
+              break;
+            case 'coins':
+              shouldUnlock = gameStats.coins >= value;
+              break;
+            case 'streak_recovered':
+              shouldUnlock = (gameStats.streakRecoveries || 0) >= value;
+              break;
+            case 'subtasks_created':
+              shouldUnlock = (gameStats.subtasksCreated || 0) >= value;
+              break;
+            case 'account_created':
+              // This is always true once account exists
+              shouldUnlock = true;
+              break;
+          }
+
+          if (shouldUnlock) {
+            await get().unlockAchievement(achievement.id);
+          }
+        }
+      },
+
+      // Check login-specific achievements (comeback)
+      checkLoginAchievements: async () => {
+        const { gameStats, user, isDemo } = get();
+        if (!gameStats || !user) return;
+
+        const today = new Date().toISOString().split('T')[0];
+        const lastLogin = gameStats.lastLoginDate;
+
+        if (lastLogin) {
+          const lastDate = new Date(lastLogin);
+          const todayDate = new Date(today);
+          const diffDays = Math.floor((todayDate.getTime() - lastDate.getTime()) / (1000 * 60 * 60 * 24));
+
+          // Check for comeback achievements
+          const { ACHIEVEMENTS } = await import('../config/achievements');
+          for (const achievement of ACHIEVEMENTS) {
+            if (achievement.requirement.type === 'comeback' &&
+                diffDays >= achievement.requirement.value &&
+                !gameStats.achievementsUnlocked.includes(achievement.id)) {
+              await get().unlockAchievement(achievement.id);
+            }
+          }
+        }
+
+        // Update last login date
+        const updates = { lastLoginDate: today };
         if (!isDemo) {
           await updateDoc(doc(db, 'gameStats', user.id), updates);
         }

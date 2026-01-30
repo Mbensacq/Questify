@@ -437,6 +437,9 @@ export const useQuestStore = create<QuestState>()(
       },
 
       completeQuest: async (questId) => {
+        const quest = get().quests.find(q => q.id === questId);
+        if (!quest) return;
+        
         const isDemo = useAuthStore.getState().isDemo;
         const updates: Partial<Quest> = {
           completed: true,
@@ -456,6 +459,40 @@ export const useQuestStore = create<QuestState>()(
             q.id === questId ? { ...q, ...updates } : q
           )
         }));
+
+        // Track quest completion for achievements
+        const authStore = useAuthStore.getState();
+        
+        // Increment total quests completed
+        const currentQuestsCompleted = authStore.gameStats?.questsCompleted || 0;
+        const user = authStore.user;
+        if (user) {
+          if (!isDemo) {
+            try {
+              await updateDoc(doc(db, 'gameStats', user.id), { 
+                questsCompleted: currentQuestsCompleted + 1 
+              });
+            } catch (e) {
+              console.warn('[Quests] Error updating quest stats:', e);
+            }
+          }
+          if (authStore.gameStats) {
+            useAuthStore.setState({
+              gameStats: {
+                ...authStore.gameStats,
+                questsCompleted: currentQuestsCompleted + 1
+              }
+            });
+          }
+        }
+
+        // Track daily quests if applicable
+        if (quest.type === 'daily') {
+          await authStore.incrementStat('dailyQuestsCompleted');
+        }
+
+        // Check all achievements
+        await authStore.checkAllAchievements();
       },
 
       claimQuestRewards: async (questId) => {

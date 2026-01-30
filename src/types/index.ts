@@ -71,6 +71,18 @@ export interface GameStats {
   tasksFailed: number;
   questsCompleted?: number;
   
+  // Difficulty-based task stats
+  epicTasksCompleted: number;
+  legendaryTasksCompleted: number;
+  hardTasksCompleted: number;
+  highPriorityTasksCompleted: number;
+  
+  // Time-based stats
+  earlyCompletions: number;    // Tasks completed before 7am
+  lateCompletions: number;     // Tasks completed after midnight
+  perfectDays: number;         // Days where all tasks were completed
+  weekendTasks: number;        // Tasks completed on weekends
+  
   // Time stats
   totalFocusTime: number; // en minutes
   averageTaskTime: number;
@@ -92,9 +104,22 @@ export interface GameStats {
   dailyTasksCompleted: number;
   weeklyTasksCompleted: number;
   
+  // Quest stats
+  dailyQuestsCompleted: number;
+  
+  // Perfect tasks (with all subtasks completed)
+  perfectTasksCompleted: number;
+  
+  // Subtasks
+  subtasksCreated: number;
+  
+  // Streak recovery tracking
+  streakRecoveries: number;
+  
   // Timestamps
   lastDailyReset: string;
   lastWeeklyReset: string;
+  lastLoginDate?: string;
 }
 
 export interface CategoryStat {
@@ -210,6 +235,7 @@ export type AchievementRarity = 'common' | 'rare' | 'epic' | 'legendary';
 export type AchievementCategory = 
   | 'tasks' 
   | 'streaks' 
+  | 'quests'
   | 'xp' 
   | 'social' 
   | 'special' 
