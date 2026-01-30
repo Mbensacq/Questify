@@ -160,6 +160,11 @@ export const useAuthStore = create<AuthState>()(
         const state = get();
         if (state.isDemo && state.user) {
           set({ isLoading: false, isInitialized: true });
+          // Check achievements for returning demo users
+          setTimeout(async () => {
+            await get().checkLoginAchievements();
+            await get().checkAllAchievements();
+          }, 500);
           return Promise.resolve();
         }
 
@@ -229,6 +234,12 @@ export const useAuthStore = create<AuthState>()(
                     isLoading: false,
                     isInitialized: true,
                   });
+
+                  // Check achievements for existing users on login
+                  setTimeout(async () => {
+                    await get().checkLoginAchievements();
+                    await get().checkAllAchievements();
+                  }, 1000);
                 } catch (error) {
                   console.error('Error loading user data:', error);
                   set({ isLoading: false, isInitialized: true, error: 'Failed to load user data' });
