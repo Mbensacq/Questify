@@ -6,42 +6,25 @@ import {
   CheckCircle2,
   Gift,
   Sparkles,
-  Target,
-  RefreshCw,
-  RotateCcw
+  Target
 } from 'lucide-react';
 import { useQuestStore } from '../stores/questStore';
 import { useAuthStore } from '../stores/authStore';
 import { QuestCard } from '../components/quests/QuestCard';
 import { Card, StatCard } from '../components/ui/Card';
-import { Button } from '../components/ui/Button';
 import { cn, formatNumber } from '../utils/helpers';
 import { differenceInHours, differenceInMinutes } from 'date-fns';
 import { Quest } from '../types';
-import toast from 'react-hot-toast';
 
 type TabType = 'daily' | 'weekly';
 
 export const QuestsPage: React.FC = () => {
-  const { getDailyQuests, getWeeklyQuests, refreshQuests, forceRegenerateQuests, claimQuestReward } = useQuestStore();
-  const { user, gameStats } = useAuthStore();
+  const { getDailyQuests, getWeeklyQuests, claimQuestReward } = useQuestStore();
+  const { gameStats } = useAuthStore();
   const [activeTab, setActiveTab] = useState<TabType>('daily');
-  const [isRegenerating, setIsRegenerating] = useState(false);
 
   const dailyQuests = getDailyQuests();
   const weeklyQuests = getWeeklyQuests();
-
-  const handleForceRegenerate = async () => {
-    if (!user) return;
-    setIsRegenerating(true);
-    try {
-      await forceRegenerateQuests(user.id);
-      toast.success('Quêtes régénérées!');
-    } catch (error) {
-      toast.error('Erreur lors de la régénération');
-    }
-    setIsRegenerating(false);
-  };
 
   if (!gameStats) return null;
 
@@ -128,22 +111,7 @@ export const QuestsPage: React.FC = () => {
               </p>
             </div>
           </div>
-          <div className="flex gap-2 w-full sm:w-auto">
-            <Button variant="secondary" size="sm" onClick={() => refreshQuests()} className="flex-1 sm:flex-initial">
-              <RefreshCw className="w-4 h-4 mr-1" />
-              Actualiser
-            </Button>
-            <Button 
-              variant="secondary" 
-              size="sm" 
-              onClick={handleForceRegenerate} 
-              disabled={isRegenerating}
-              className="flex-1 sm:flex-initial"
-            >
-              <RotateCcw className={cn("w-4 h-4 mr-1", isRegenerating && "animate-spin")} />
-              Régénérer
-            </Button>
-          </div>
+
         </div>
       </Card>
 
