@@ -90,11 +90,12 @@ export const StatsPage: React.FC = () => {
     low: tasks.filter((t) => t.priority === 'low').length,
   };
 
-  // Calculate statistics
-  const totalCompleted = tasks.filter((t) => t.status === 'completed').length;
-  const totalTasks = tasks.length;
+  // Calculate statistics from persisted gameStats (not from tasks array)
+  // This ensures stats persist even after tasks are deleted
+  const totalCompleted = gameStats.tasksCompleted;
+  const totalTasks = gameStats.tasksCreated;
   const completionRate = totalTasks > 0 ? Math.round((totalCompleted / totalTasks) * 100) : 0;
-  const avgTasksPerDay = Math.round(totalCompleted / days);
+  const avgTasksPerDay = days > 0 ? Math.round(totalCompleted / days) : 0;
 
   // Chart configurations
   const lineChartData = {

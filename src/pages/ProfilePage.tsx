@@ -37,8 +37,8 @@ export const ProfilePage: React.FC = () => {
 
   if (!user || !gameStats) return null;
 
-  // Calculate stats
-  const completedTasks = tasks.filter((t) => t.status === 'completed').length;
+  // Use persisted stats instead of counting tasks (stats persist after deletion)
+  const completedTasks = gameStats.tasksCompleted;
   const unlockedAchievements = ACHIEVEMENTS.filter((a) =>
     gameStats.achievementsUnlocked.includes(a.id)
   );
