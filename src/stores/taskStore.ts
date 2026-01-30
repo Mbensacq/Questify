@@ -235,13 +235,14 @@ export const useTaskStore = create<TaskState>()(
         
         if (isDemo) {
           task = { ...newTask, id: uuidv4() } as Task;
+          // Only update local state in demo mode - Firebase listener handles it otherwise
+          set(state => ({ tasks: [...state.tasks, task] }));
         } else {
-          // Must save to Firebase for multi-device sync
+          // Save to Firebase - onSnapshot listener will update local state automatically
           const docRef = await addDoc(collection(db, 'tasks'), newTask);
           task = { ...newTask, id: docRef.id } as Task;
+          // Do NOT update local state here - onSnapshot will handle it
         }
-        
-        set(state => ({ tasks: [...state.tasks, task] }));
         
         // Incrémenter le compteur de tâches créées (ignore errors)
         try {
@@ -266,13 +267,15 @@ export const useTaskStore = create<TaskState>()(
         
         if (!isDemo) {
           await updateDoc(doc(db, 'tasks', id), cleanUpdates);
+          // onSnapshot listener will update local state automatically
+        } else {
+          // Only update local state in demo mode
+          set(state => ({
+            tasks: state.tasks.map(task => 
+              task.id === id ? { ...task, ...cleanUpdates } : task
+            )
+          }));
         }
-        
-        set(state => ({
-          tasks: state.tasks.map(task => 
-            task.id === id ? { ...task, ...cleanUpdates } : task
-          )
-        }));
       },
 
       deleteTask: async (id) => {
@@ -281,15 +284,22 @@ export const useTaskStore = create<TaskState>()(
         if (!isDemo) {
           try {
             await deleteDoc(doc(db, 'tasks', id));
+            // onSnapshot listener will update local state automatically
           } catch (e) {
             console.warn('Firebase delete failed:', e);
           }
+        } else {
+          // Only update local state in demo mode
+          set(state => ({
+            tasks: state.tasks.filter(task => task.id !== id),
+            selectedTask: state.selectedTask?.id === id ? null : state.selectedTask
+          }));
         }
         
-        set(state => ({
-          tasks: state.tasks.filter(task => task.id !== id),
-          selectedTask: state.selectedTask?.id === id ? null : state.selectedTask
-        }));
+        // Clear selected task if it was deleted
+        if (get().selectedTask?.id === id) {
+          set({ selectedTask: null });
+        }
       },
 
       completeTask: async (id) => {
@@ -304,20 +314,22 @@ export const useTaskStore = create<TaskState>()(
           progress: 100,
         };
 
-        // Update Firebase if not in demo mode (but don't fail if it errors)
+        // Update Firebase if not in demo mode
         if (!isDemo) {
           try {
             await updateDoc(doc(db, 'tasks', id), updates);
+            // onSnapshot listener will update local state automatically
           } catch (e) {
-            console.warn('Firebase update failed, continuing locally:', e);
+            console.warn('Firebase update failed:', e);
           }
+        } else {
+          // Only update local state in demo mode
+          set(state => ({
+            tasks: state.tasks.map(t => 
+              t.id === id ? { ...t, ...updates } : t
+            )
+          }));
         }
-        
-        set(state => ({
-          tasks: state.tasks.map(t => 
-            t.id === id ? { ...t, ...updates } : t
-          )
-        }));
 
         // Ajouter les récompenses (wrap in try-catch to prevent failures)
         try {
@@ -376,16 +388,17 @@ export const useTaskStore = create<TaskState>()(
         if (!isDemo) {
           try {
             await updateDoc(doc(db, 'tasks', id), updates);
+            // onSnapshot handles local state update
           } catch (e) {
             console.warn('Firebase update failed:', e);
           }
+        } else {
+          set(state => ({
+            tasks: state.tasks.map(t => 
+              t.id === id ? { ...t, ...updates } : t
+            )
+          }));
         }
-        
-        set(state => ({
-          tasks: state.tasks.map(t => 
-            t.id === id ? { ...t, ...updates } : t
-          )
-        }));
 
         try {
           await useAuthStore.getState().incrementStat('tasksFailed');
@@ -403,13 +416,14 @@ export const useTaskStore = create<TaskState>()(
 
         if (!isDemo) {
           await updateDoc(doc(db, 'tasks', id), updates);
+          // onSnapshot handles local state update
+        } else {
+          set(state => ({
+            tasks: state.tasks.map(t => 
+              t.id === id ? { ...t, ...updates } : t
+            )
+          }));
         }
-        
-        set(state => ({
-          tasks: state.tasks.map(t => 
-            t.id === id ? { ...t, ...updates } : t
-          )
-        }));
       },
 
       addSubtask: async (taskId, title) => {
