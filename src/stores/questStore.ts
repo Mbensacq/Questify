@@ -152,13 +152,18 @@ export const useQuestStore = create<QuestState>()(
           const q = query(questsRef, where('userId', '==', userId));
           const snapshot = await getDocs(q);
           
-          const quests = snapshot.docs.map(doc => ({
-            ...doc.data(),
-            id: doc.id,
-            startDate: doc.data().startDate?.toDate() || new Date(),
-            endDate: doc.data().endDate?.toDate() || new Date(),
-            completedAt: doc.data().completedAt?.toDate(),
-          })) as Quest[];
+          console.log('[Quests] Firebase returned', snapshot.docs.length, 'quests');
+          
+          const quests = snapshot.docs.map(doc => {
+            const data = doc.data();
+            return {
+              ...data,
+              id: doc.id,
+              startDate: data.startDate?.toDate ? data.startDate.toDate() : new Date(data.startDate),
+              endDate: data.endDate?.toDate ? data.endDate.toDate() : new Date(data.endDate),
+              completedAt: data.completedAt?.toDate ? data.completedAt.toDate() : (data.completedAt ? new Date(data.completedAt) : undefined),
+            };
+          }) as Quest[];
           
           // Vérifier si on doit générer de nouvelles quêtes
           const today = new Date();
@@ -169,23 +174,32 @@ export const useQuestStore = create<QuestState>()(
             new Date(q.startDate).toDateString() === today.toDateString()
           );
           
+          // Start of week (Monday)
           const startOfWeek = new Date(today);
-          startOfWeek.setDate(startOfWeek.getDate() - startOfWeek.getDay());
+          const dayOfWeek = startOfWeek.getDay();
+          const daysToMonday = dayOfWeek === 0 ? 6 : dayOfWeek - 1;
+          startOfWeek.setDate(startOfWeek.getDate() - daysToMonday);
           
           const hasValidWeeklyQuests = quests.some(q => 
             q.type === 'weekly' && 
             new Date(q.startDate) >= startOfWeek
           );
           
+          console.log('[Quests] Firebase - Has valid daily:', hasValidDailyQuests, 'weekly:', hasValidWeeklyQuests);
+          
           set({ quests, isLoading: false });
           
           // Générer de nouvelles quêtes si nécessaire
           if (!hasValidDailyQuests || !hasValidWeeklyQuests) {
+            console.log('[Quests] Firebase - Generating new quests');
             await get().generateNewQuests(userId);
           }
         } catch (error) {
-          console.error('Error loading quests:', error);
+          console.error('[Quests] Error loading quests from Firebase:', error);
+          // En cas d'erreur Firebase, essayer de générer des quêtes quand même
+          console.log('[Quests] Falling back to local quest generation');
           set({ isLoading: false });
+          await get().generateNewQuests(userId);
         }
       },
 
@@ -203,7 +217,7 @@ export const useQuestStore = create<QuestState>()(
         startOfWeek.setDate(startOfWeek.getDate() - daysToMonday);
         const weekStr = startOfWeek.toISOString().split('T')[0];
         
-        console.log('[Quests] Generating new quests for user:', userId);
+        console.log('[Quests] Generating new quests for user:', userId, 'isDemo:', isDemo);
         
         // Remove expired or claimed quests
         const expiredOrClaimedQuests = quests.filter(q => 
@@ -214,7 +228,7 @@ export const useQuestStore = create<QuestState>()(
             try {
               await deleteDoc(doc(db, 'quests', quest.id));
             } catch (e) {
-              console.error('Error deleting quest:', e);
+              console.warn('[Quests] Error deleting quest (continuing anyway):', e);
             }
           }
         }
@@ -240,7 +254,11 @@ export const useQuestStore = create<QuestState>()(
           for (const template of dailyTemplates) {
             const quest = createQuestFromTemplate(template, userId);
             if (!isDemo) {
-              await setDoc(doc(db, 'quests', quest.id), quest);
+              try {
+                await setDoc(doc(db, 'quests', quest.id), quest);
+              } catch (e) {
+                console.warn('[Quests] Error saving quest to Firebase (continuing anyway):', e);
+              }
             }
             validQuests.push(quest);
           }
@@ -263,7 +281,11 @@ export const useQuestStore = create<QuestState>()(
           for (const template of weeklyTemplates) {
             const quest = createQuestFromTemplate(template, userId);
             if (!isDemo) {
-              await setDoc(doc(db, 'quests', quest.id), quest);
+              try {
+                await setDoc(doc(db, 'quests', quest.id), quest);
+              } catch (e) {
+                console.warn('[Quests] Error saving weekly quest to Firebase (continuing anyway):', e);
+              }
             }
             validQuests.push(quest);
           }
@@ -281,7 +303,7 @@ export const useQuestStore = create<QuestState>()(
 
       forceRegenerateQuests: async (userId) => {
         const isDemo = useAuthStore.getState().isDemo;
-        console.log('[Quests] Force regenerating all quests for user:', userId);
+        console.log('[Quests] Force regenerating all quests for user:', userId, 'isDemo:', isDemo);
         
         // Clear all existing quests
         const { quests } = get();
@@ -290,7 +312,7 @@ export const useQuestStore = create<QuestState>()(
             try {
               await deleteDoc(doc(db, 'quests', quest.id));
             } catch (e) {
-              console.error('Error deleting quest:', e);
+              console.warn('[Quests] Error deleting quest (continuing anyway):', e);
             }
           }
         }
@@ -320,7 +342,11 @@ export const useQuestStore = create<QuestState>()(
         for (const template of dailyTemplates) {
           const quest = createQuestFromTemplate(template, userId);
           if (!isDemo) {
-            await setDoc(doc(db, 'quests', quest.id), quest);
+            try {
+              await setDoc(doc(db, 'quests', quest.id), quest);
+            } catch (e) {
+              console.warn('[Quests] Error saving daily quest to Firebase (continuing anyway):', e);
+            }
           }
           newQuests.push(quest);
         }
@@ -330,7 +356,11 @@ export const useQuestStore = create<QuestState>()(
         for (const template of weeklyTemplates) {
           const quest = createQuestFromTemplate(template, userId);
           if (!isDemo) {
-            await setDoc(doc(db, 'quests', quest.id), quest);
+            try {
+              await setDoc(doc(db, 'quests', quest.id), quest);
+            } catch (e) {
+              console.warn('[Quests] Error saving weekly quest to Firebase (continuing anyway):', e);
+            }
           }
           newQuests.push(quest);
         }
@@ -370,7 +400,11 @@ export const useQuestStore = create<QuestState>()(
         };
 
         if (!isDemo) {
-          await updateDoc(doc(db, 'quests', questId), updates);
+          try {
+            await updateDoc(doc(db, 'quests', questId), updates);
+          } catch (e) {
+            console.warn('[Quests] Error updating quest progress in Firebase:', e);
+          }
         }
         
         set(state => ({
@@ -388,7 +422,11 @@ export const useQuestStore = create<QuestState>()(
         };
 
         if (!isDemo) {
-          await updateDoc(doc(db, 'quests', questId), updates);
+          try {
+            await updateDoc(doc(db, 'quests', questId), updates);
+          } catch (e) {
+            console.warn('[Quests] Error completing quest in Firebase:', e);
+          }
         }
         
         set(state => ({
@@ -415,7 +453,11 @@ export const useQuestStore = create<QuestState>()(
         }
         
         if (!isDemo) {
-          await updateDoc(doc(db, 'quests', questId), { claimed: true });
+          try {
+            await updateDoc(doc(db, 'quests', questId), { claimed: true });
+          } catch (e) {
+            console.warn('[Quests] Error claiming quest in Firebase:', e);
+          }
         }
         
         set(state => ({
