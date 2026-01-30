@@ -1,6 +1,6 @@
 import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Trophy, Lock, Star, Gift, Check, Sparkles } from 'lucide-react';
+import { Trophy, Lock, Star, Check, Sparkles } from 'lucide-react';
 import { Card } from '../ui/Card';
 import { Badge } from '../ui/Badge';
 import { ProgressBar } from '../ui/ProgressBar';

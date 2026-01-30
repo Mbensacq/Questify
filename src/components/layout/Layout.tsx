@@ -4,15 +4,12 @@ import { motion } from 'framer-motion';
 import { Plus } from 'lucide-react';
 import { Sidebar, BottomNav } from './Sidebar';
 import { useUIStore } from '../../stores/uiStore';
-import { useAuthStore } from '../../stores/authStore';
-import { Button } from '../ui/Button';
 import { GameAnimations } from '../game/GameAnimations';
 import { TaskModal } from '../tasks/TaskModal';
 import { cn } from '../../utils/helpers';
 
 export const Layout: React.FC = () => {
   const { sidebarOpen, isMobile, isTaskModalOpen, editingTask, openTaskModal, closeTaskModal } = useUIStore();
-  const { user } = useAuthStore();
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-950 overflow-x-hidden">
